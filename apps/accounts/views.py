@@ -56,13 +56,110 @@ def register_cafe(request):
     if request.method == 'POST':
         form = CafeRegistrationForm(request.POST)
         if form.is_valid():
+            # Remove any stale inactive registrations for this email
+            User.objects.filter(email=form.cleaned_data['email'], is_active=False).delete()
             user = form.save()
-            login(request, user, backend=BACKEND)
-            messages.success(request, 'Akun berhasil dibuat!')
-            return redirect('/')
+            user.is_active = False
+            user.save(update_fields=['is_active'])
+            otp = EmailOTP.generate(user)
+            _send_otp_email(user, otp, subject='Kode OTP Verifikasi Pendaftaran Sup Kopi')
+            request.session['register_user_id'] = user.pk
+            return redirect('/accounts/register/verify/')
     else:
         form = CafeRegistrationForm()
     return render(request, 'accounts/register.html', {'form': form})
+
+
+def register_otp_verify(request):
+    user_id = request.session.get('register_user_id')
+    if not user_id:
+        return redirect('/accounts/register/')
+
+    user = get_object_or_404(User, pk=user_id, is_active=False)
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        otp = (
+            EmailOTP.objects
+            .filter(user=user, is_used=False)
+            .order_by('-created_at')
+            .first()
+        )
+
+        if not otp or otp.is_expired:
+            messages.error(request, 'Kode OTP sudah kedaluwarsa. Minta kode baru.')
+            return render(request, 'accounts/register_otp.html', {'email': user.email})
+
+        if otp.code != code:
+            messages.error(request, 'Kode OTP salah.')
+            return render(request, 'accounts/register_otp.html', {'email': user.email})
+
+        otp.is_used = True
+        otp.save()
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+        del request.session['register_user_id']
+        login(request, user, backend=BACKEND)
+        messages.success(request, 'Akun berhasil dibuat dan diverifikasi!')
+        return redirect('/')
+
+    return render(request, 'accounts/register_otp.html', {'email': user.email})
+
+
+def register_otp_resend(request):
+    user_id = request.session.get('register_user_id')
+    if not user_id:
+        return redirect('/accounts/register/')
+
+    user = get_object_or_404(User, pk=user_id, is_active=False)
+    otp = EmailOTP.generate(user)
+    _send_otp_email(user, otp, subject='Kode OTP Verifikasi Pendaftaran Sup Kopi (Baru)')
+    messages.success(request, 'Kode OTP baru sudah dikirim ke email kamu.')
+    return redirect('/accounts/register/verify/')
+
+
+@login_required
+def google_setup(request):
+    """Complete cafe profile after Google signup."""
+    try:
+        profile = request.user.cafe_profile
+    except CafeProfile.DoesNotExist:
+        profile = CafeProfile(user=request.user)
+
+    if request.method == 'POST':
+        cafe_name = request.POST.get('cafe_name', '').strip()
+        address = request.POST.get('address', '').strip()
+        city = request.POST.get('city', '').strip()
+        province = request.POST.get('province', '').strip()
+        postal_code = request.POST.get('postal_code', '').strip()
+
+        errors = []
+        if not cafe_name:
+            errors.append('Nama kafe tidak boleh kosong.')
+        if not city:
+            errors.append('Kota tidak boleh kosong.')
+        if not province:
+            errors.append('Provinsi tidak boleh kosong.')
+        if not postal_code:
+            errors.append('Kode pos tidak boleh kosong.')
+
+        if not errors:
+            profile.cafe_name = cafe_name
+            profile.address = address
+            profile.city = city
+            profile.province = province
+            profile.postal_code = postal_code
+            profile.save()
+            messages.success(request, 'Profil kafe berhasil disimpan. Selamat bergabung!')
+            return redirect('/')
+
+        return render(request, 'accounts/google_setup.html', {
+            'profile': profile,
+            'errors': errors,
+            'post': request.POST,
+        })
+
+    return render(request, 'accounts/google_setup.html', {'profile': profile})
 
 
 def login_view(request):
@@ -74,22 +171,34 @@ def login_view(request):
     next_url = request.GET.get('next', '/')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
         next_url = request.POST.get('next', '/')
-        user = authenticate(request, username=username, password=password)
+        try:
+            found = User.objects.get(email__iexact=email, is_active=True)
+        except (User.DoesNotExist, User.MultipleObjectsReturned):
+            found = None
+
+        user = authenticate(request, username=found.username, password=password) if found else None
+
         if user:
             if user.is_any_supplier:
                 return redirect('/accounts/supplier/login/')
             login(request, user, backend=BACKEND)
+            messages.success(request, f'Selamat datang, {user.username}!')
             return redirect(next_url if next_url.startswith('/') else '/')
-        messages.error(request, 'Username atau password salah.')
+
+        if found and not found.has_usable_password() and found.socialaccount_set.filter(provider='google').exists():
+            messages.error(request, 'Akun ini terdaftar via Google dan belum punya password. Gunakan "Lupa password?" untuk set password, atau klik Login Google.')
+        else:
+            messages.error(request, 'Email atau password salah.')
 
     return render(request, 'accounts/login.html', {'next': next_url})
 
 
 def logout_view(request):
     logout(request)
+    messages.success(request, 'Kamu berhasil logout. Sampai jumpa!')
     response = redirect('/accounts/login/')
     response.delete_cookie(TRUSTED_DEVICE_COOKIE)
     return response
@@ -118,6 +227,7 @@ def supplier_login(request):
         if user and user.is_any_supplier:
             if _is_trusted_device(request, user):
                 login(request, user, backend=BACKEND)
+                messages.success(request, f'Selamat datang kembali, {user.username}!')
                 return redirect('/supplier/dashboard/')
 
             if not user.email:
@@ -162,6 +272,7 @@ def supplier_otp_verify(request):
         otp.save()
         del request.session['otp_user_id']
         login(request, user, backend=BACKEND)
+        messages.success(request, f'Selamat datang, {user.username}!')
         response = redirect('/supplier/dashboard/')
         _set_trusted_cookie(response, user)
         return response

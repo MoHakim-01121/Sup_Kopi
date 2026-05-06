@@ -19,7 +19,7 @@ class CafeRegistrationForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email, is_active=True).exists():
             raise forms.ValidationError('Email ini sudah terdaftar.')
         return email
 

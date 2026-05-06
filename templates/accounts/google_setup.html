@@ -1,0 +1,79 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Lengkapi Profil Kafe — Sup Kopi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" style="padding: 40px 0 60px;">
+    <div class="col-md-6 col-sm-11">
+
+        <div class="text-center mb-4">
+            <div style="font-size:2rem; color:var(--co-primary);">
+                <i class="fa-brands fa-google"></i>
+            </div>
+            <h2 style="font-size:1.5rem; font-weight:700; color:var(--co-primary); letter-spacing:-0.3px; margin:10px 0 4px;">
+                Satu Langkah Lagi!
+            </h2>
+            <p style="font-size:0.875rem; color:var(--co-muted);">
+                Akun Google kamu sudah terhubung. Lengkapi data kafe untuk mulai berbelanja.
+            </p>
+        </div>
+
+        <div class="card" style="border-radius:var(--r-md);">
+            <div class="card-body" style="padding:36px;">
+
+                {% if errors %}
+                <div class="alert alert-danger" style="border-radius:var(--r-sm);">
+                    {% for error in errors %}
+                    <div><i class="fa-solid fa-circle-exclamation me-2"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Nama Kafe <span class="text-danger">*</span></label>
+                        <input type="text" name="cafe_name" class="form-control"
+                               value="{{ post.cafe_name|default:profile.cafe_name }}"
+                               placeholder="Nama kafe kamu" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Alamat Lengkap</label>
+                        <textarea name="address" class="form-control" rows="2"
+                                  placeholder="Jl. ...">{{ post.address|default:profile.address }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label class="form-label">Kota <span class="text-danger">*</span></label>
+                            <input type="text" name="city" class="form-control"
+                                   value="{{ post.city|default:profile.city }}"
+                                   placeholder="Jakarta" required>
+                        </div>
+                        <div class="col mb-3">
+                            <label class="form-label">Provinsi <span class="text-danger">*</span></label>
+                            <input type="text" name="province" class="form-control"
+                                   value="{{ post.province|default:profile.province }}"
+                                   placeholder="DKI Jakarta" required>
+                        </div>
+                        <div class="col-auto mb-3">
+                            <label class="form-label">Kode Pos <span class="text-danger">*</span></label>
+                            <input type="text" name="postal_code" class="form-control"
+                                   value="{{ post.postal_code|default:profile.postal_code }}"
+                                   placeholder="12345" required style="width:100px;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 mt-2" style="padding:12px; font-size:0.95rem;">
+                        <i class="fa-solid fa-store me-2"></i>Simpan & Mulai Belanja
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

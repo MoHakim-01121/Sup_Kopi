@@ -3,6 +3,9 @@ from . import views
 
 urlpatterns = [
     path('register/', views.register_cafe, name='register'),
+    path('register/verify/', views.register_otp_verify, name='register_otp_verify'),
+    path('register/resend/', views.register_otp_resend, name='register_otp_resend'),
+    path('google-setup/', views.google_setup, name='google_setup'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
