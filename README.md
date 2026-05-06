@@ -12,6 +12,10 @@ Platform B2B supplier kopi — menghubungkan supplier dengan kafe. Dibangun deng
 - OTP email untuk supplier
 - Manajemen staff supplier
 
+next?
+- fitur pengiriman yang lebih advance
+- sales tracking (kunjungan, dll)
+
 ## Tech Stack
 
 - **Backend**: Django 6.0.4
