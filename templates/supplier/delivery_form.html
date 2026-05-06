@@ -1,0 +1,48 @@
+﻿{% extends 'base_supplier.html' %}
+
+{% block title %}Input Pengiriman â€” Sup Kopi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h4 class="fw-bold mb-4">Input Data Pengiriman</h4>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <p class="mb-1"><strong>Order:</strong> {{ order.order_number }}</p>
+                <p class="mb-1"><strong>Kafe:</strong> {{ order.cafe.cafe_profile.cafe_name }}</p>
+                <p class="mb-0"><strong>Alamat:</strong> {{ order.shipping_address }}</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Nama Kurir</label>
+                        <select name="courier_name" class="form-select" required>
+                            <option value="">Pilih kurir...</option>
+                            <option value="JNE">JNE</option>
+                            <option value="J&T">J&T Express</option>
+                            <option value="SiCepat">SiCepat</option>
+                            <option value="AnterAja">AnterAja</option>
+                            <option value="Ninja Xpress">Ninja Xpress</option>
+                            <option value="Pos Indonesia">Pos Indonesia</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nomor Resi</label>
+                        <input type="text" name="tracking_number" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Catatan (opsional)</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100">Simpan & Kirim</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

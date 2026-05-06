@@ -1,0 +1,767 @@
+{% extends 'base_store.html' %}
+{% load catalog_tags %}
+
+{% block title %}Katalog Produk — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    /* ── PAGE HEADER — full-bleed border ── */
+    .catalog-header {
+        padding: 32px 0 24px;
+        margin: -40px -24px 28px;
+        padding-left: 24px; padding-right: 24px;
+        border-bottom: 1px solid var(--co-hairline);
+        background: var(--co-canvas);
+    }
+    .page-eyebrow {
+        font-family: 'JetBrains Mono', monospace; font-size: 11px;
+        letter-spacing: 1.5px; text-transform: uppercase; color: var(--co-muted);
+        display: block; margin-bottom: 6px;
+    }
+    .catalog-header h1 {
+        font-family: 'Space Grotesk', sans-serif; font-size: 1.75rem;
+        font-weight: 400; letter-spacing: -0.03em; color: var(--co-primary); margin: 0;
+    }
+
+    /* ── CATALOG 2-COL LAYOUT ── */
+    .catalog-layout {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 28px;
+        align-items: start;
+    }
+
+    /* ── FILTER SIDEBAR ── */
+    .filter-sidebar {
+        position: sticky; top: 88px;
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); overflow: hidden;
+        background: var(--co-canvas);
+    }
+    .sidebar-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 13px 16px; border-bottom: 1px solid var(--co-hairline);
+        background: var(--co-stone);
+    }
+    .sidebar-head-title {
+        font-family: 'Space Grotesk', sans-serif; font-size: 13px;
+        font-weight: 600; color: var(--co-primary);
+        display: flex; align-items: center; gap: 7px;
+    }
+    .sidebar-head-title i { color: var(--co-muted); font-size: 12px; }
+    .sidebar-reset {
+        font-size: 12px; color: var(--co-muted); text-decoration: none;
+        transition: color 0.15s;
+    }
+    .sidebar-reset:hover { color: var(--co-error); }
+
+    /* Filter group */
+    .filter-group { border-bottom: 1px solid var(--co-hairline); }
+    .filter-group:last-of-type { border-bottom: none; }
+    .fg-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        width: 100%; padding: 12px 16px; background: none; border: none;
+        cursor: pointer; font-size: 13px; font-weight: 600;
+        color: var(--co-primary); transition: background 0.12s; text-align: left;
+    }
+    .fg-toggle:hover { background: var(--co-stone); }
+    .fg-chevron { font-size: 10px; color: var(--co-muted); transition: transform 0.2s; }
+    .fg-toggle.collapsed .fg-chevron { transform: rotate(-180deg); }
+    .fg-body { padding: 2px 16px 13px; }
+    .fg-body.hidden { display: none; }
+
+    /* Radio */
+    .filter-radio {
+        display: flex; align-items: center; gap: 9px; padding: 5px 0;
+        cursor: pointer; font-size: 13px; color: var(--co-ink); line-height: 1.3;
+    }
+    .filter-radio:hover .radio-dot { border-color: var(--co-primary); }
+    .filter-radio input { display: none; }
+    .radio-dot {
+        width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+        border: 1.5px solid var(--co-hairline); background: var(--co-canvas);
+        display: flex; align-items: center; justify-content: center;
+        transition: border-color 0.15s;
+    }
+    .radio-dot::after {
+        content: ''; width: 8px; height: 8px; border-radius: 50%;
+        background: var(--co-primary); opacity: 0; transition: opacity 0.15s;
+    }
+    .filter-radio input:checked ~ .radio-dot { border-color: var(--co-primary); }
+    .filter-radio input:checked ~ .radio-dot::after { opacity: 1; }
+    .radio-label { flex: 1; }
+    .radio-count {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--co-muted);
+    }
+
+    /* Checkbox */
+    .filter-check {
+        display: flex; align-items: center; gap: 9px; padding: 5px 0;
+        cursor: pointer; font-size: 13px; color: var(--co-ink);
+    }
+    .filter-check:hover .check-box { border-color: var(--co-deep-green); }
+    .filter-check input { display: none; }
+    .check-box {
+        width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+        border: 1.5px solid var(--co-hairline); background: var(--co-canvas);
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s;
+    }
+    .check-box::after {
+        content: ''; width: 9px; height: 5px;
+        border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+        transform: rotate(-45deg) translate(1px, -1px);
+        opacity: 0; transition: opacity 0.12s;
+    }
+    .filter-check input:checked ~ .check-box {
+        background: var(--co-deep-green); border-color: var(--co-deep-green);
+    }
+    .filter-check input:checked ~ .check-box::after { opacity: 1; }
+
+    /* Price preset buttons */
+    .price-presets { display: flex; flex-direction: column; gap: 4px; }
+    .price-preset-btn {
+        display: flex; align-items: center; gap: 8px;
+        padding: 7px 10px; border-radius: var(--r-xs);
+        border: 1.5px solid var(--co-hairline); background: var(--co-canvas);
+        font-size: 12px; font-weight: 500; color: var(--co-ink);
+        cursor: pointer; transition: all 0.14s; text-align: left; width: 100%;
+    }
+    .price-preset-btn:hover { border-color: var(--co-primary); color: var(--co-primary); background: var(--co-stone); }
+    .price-preset-btn.active {
+        border-color: var(--co-primary); background: var(--co-primary); color: #fff;
+    }
+    .price-preset-btn.active i { color: #fff; }
+    .price-preset-btn i { font-size: 10px; color: var(--co-muted); }
+
+    /* Mobile footer */
+    .sidebar-footer {
+        display: none; gap: 8px; padding: 16px;
+        border-top: 1px solid var(--co-hairline); background: var(--co-canvas);
+        position: sticky; bottom: 0;
+    }
+    .btn-apply-all {
+        flex: 1; padding: 11px; background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-xs); font-size: 14px; font-weight: 500;
+        cursor: pointer; transition: background 0.15s;
+    }
+    .btn-apply-all:hover { background: var(--co-primary-hover); }
+    .btn-close-drawer {
+        padding: 11px 14px; background: var(--co-stone); color: var(--co-muted);
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        font-size: 14px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-close-drawer:hover { color: var(--co-primary); border-color: var(--co-primary); }
+
+    /* ── MAIN CONTENT ── */
+    .catalog-main { min-width: 0; }
+
+    /* Topbar */
+    .catalog-topbar {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    /* Mobile filter button */
+    .btn-filter-mobile {
+        display: none; align-items: center; gap: 6px;
+        height: 36px; padding: 0 14px; flex-shrink: 0;
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        background: var(--co-canvas); font-size: 13px; font-weight: 500;
+        color: var(--co-ink); cursor: pointer; transition: border-color 0.15s;
+        position: relative;
+    }
+    .btn-filter-mobile:hover { border-color: var(--co-primary); }
+    .filter-badge {
+        background: var(--co-primary); color: #fff; border-radius: 9999px;
+        min-width: 18px; height: 18px; font-size: 10px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
+    }
+
+    /* Search */
+    .search-wrap { flex: 1; min-width: 160px; max-width: 480px; position: relative; }
+    .search-field {
+        display: flex; align-items: center;
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        overflow: hidden; background: var(--co-canvas);
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-field:focus-within {
+        border-color: var(--co-primary);
+        box-shadow: 0 0 0 3px rgba(23,23,28,0.07);
+    }
+    .search-field input {
+        flex: 1; border: none; background: transparent;
+        padding: 8px 12px; font-size: 14px; color: var(--co-ink); outline: none;
+    }
+    .search-field input::placeholder { color: var(--co-muted); }
+    .search-field button {
+        background: var(--co-primary); color: #fff; border: none;
+        padding: 8px 14px; font-size: 13px; cursor: pointer; flex-shrink: 0;
+        transition: background 0.15s;
+    }
+    .search-field button:hover { background: var(--co-primary-hover); }
+
+    /* Sort select */
+    .filter-select-wrap { position: relative; flex-shrink: 0; }
+    .filter-select-wrap::after {
+        content: ''; position: absolute; right: 10px; top: 50%;
+        transform: translateY(-50%); pointer-events: none;
+        border-left: 4px solid transparent; border-right: 4px solid transparent;
+        border-top: 5px solid var(--co-muted);
+    }
+    .filter-select {
+        height: 36px; padding: 0 28px 0 12px; appearance: none; -webkit-appearance: none;
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        background: var(--co-canvas); font-size: 13px; font-weight: 500;
+        color: var(--co-ink); cursor: pointer; outline: none; transition: border-color 0.15s;
+    }
+    .filter-select:hover, .filter-select:focus { border-color: var(--co-primary); }
+
+    /* Autocomplete dropdown */
+    .search-dropdown {
+        position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+        background: var(--co-canvas); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        z-index: 500; overflow: hidden; display: none;
+    }
+    .search-dropdown.open { display: block; }
+    .search-suggestion {
+        display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+        border-bottom: 1px solid var(--co-hairline);
+        transition: background 0.12s; text-decoration: none;
+    }
+    .search-suggestion:last-child { border-bottom: none; }
+    .search-suggestion:hover { background: var(--co-stone); }
+    .suggestion-icon {
+        width: 28px; height: 28px; border-radius: var(--r-xs);
+        background: var(--co-stone); border: 1px solid var(--co-hairline);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--co-muted); font-size: 11px; flex-shrink: 0;
+    }
+    .suggestion-name { font-size: 13px; font-weight: 500; color: var(--co-ink); }
+    .suggestion-cat { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--co-muted); margin-top: 1px; }
+
+    /* Active filter chips */
+    .active-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: var(--co-stone); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xl); padding: 4px 10px;
+        font-size: 12px; font-weight: 500; color: var(--co-ink);
+    }
+    .chip i { font-size: 9px; opacity: 0.6; }
+    .chip-green { background: #edfce9; border-color: #a7f3c0; color: var(--co-deep-green); }
+    .chip-remove {
+        color: var(--co-muted); text-decoration: none; line-height: 1;
+        margin-left: 2px; font-size: 13px; transition: color 0.12s;
+    }
+    .chip-remove:hover { color: var(--co-error); }
+
+    /* Results divider */
+    .results-divider {
+        font-size: 13px; color: var(--co-muted);
+        border-bottom: 1px solid var(--co-hairline);
+        padding-bottom: 12px; margin-bottom: 20px;
+    }
+    .results-divider strong { color: var(--co-primary); }
+
+    /* ── PRODUCT GRID ── */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 14px;
+    }
+
+    /* ── PRODUCT CARD ── */
+    .product-card {
+        background: var(--co-canvas); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); overflow: hidden;
+        display: flex; flex-direction: column; position: relative;
+        cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .product-card:hover {
+        border-color: var(--co-primary);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    }
+    .product-card-link { position: absolute; inset: 0; z-index: 0; border-radius: var(--r-sm); }
+    .product-img { height: 180px; object-fit: cover; width: 100%; display: block; }
+    .product-img-ph {
+        height: 180px; background: var(--co-stone); border-bottom: 1px solid var(--co-hairline);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--co-muted); font-size: 2rem; opacity: 0.35;
+    }
+    .product-body { padding: 13px 14px; flex: 1; display: flex; flex-direction: column; position: relative; }
+    .product-cat-mono {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px;
+        text-transform: uppercase; letter-spacing: 1px; color: var(--co-muted); margin-bottom: 4px;
+    }
+    .product-name {
+        font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600;
+        color: var(--co-primary); margin-bottom: 8px; line-height: 1.3;
+    }
+    .product-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+    .badge-ok {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 7px;
+        border-radius: var(--r-xl); background: #edfce9; color: var(--co-deep-green); border: 1px solid #a7f3c0;
+    }
+    .badge-out {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 7px;
+        border-radius: var(--r-xl); background: #fff1f0; color: var(--co-error); border: 1px solid #fecaca;
+    }
+    .badge-moq {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 7px;
+        border-radius: var(--r-xl); background: var(--co-stone); color: var(--co-muted); border: 1px solid var(--co-hairline);
+    }
+    .product-footer {
+        margin-top: auto; padding-top: 10px;
+        border-top: 1px solid var(--co-hairline);
+        position: relative; z-index: 1;
+    }
+    .product-price {
+        font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+        font-weight: 600; color: var(--co-primary); margin-bottom: 9px;
+    }
+    .product-price .unit { font-size: 11px; font-weight: 400; color: var(--co-muted); font-family: 'Inter', sans-serif; }
+    .btn-add-sm {
+        display: block; width: 100%; background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-xs); padding: 8px; font-size: 13px;
+        font-weight: 500; cursor: pointer; transition: background 0.15s; text-align: center;
+    }
+    .btn-add-sm:hover { background: var(--co-primary-hover); }
+    .btn-add-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-detail-sm {
+        display: block; width: 100%; text-align: center;
+        background: transparent; color: var(--co-primary);
+        border: 1px solid var(--co-primary); border-radius: var(--r-xs);
+        padding: 8px; font-size: 13px; font-weight: 500;
+        text-decoration: none; transition: background 0.15s;
+    }
+    .btn-detail-sm:hover { background: var(--co-primary); color: #fff; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+        text-align: center; padding: 72px 24px;
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); background: var(--co-canvas);
+    }
+    .empty-icon { font-size: 2.8rem; color: var(--co-muted); opacity: 0.38; display: block; margin-bottom: 16px; }
+    .empty-state h5 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--co-primary); margin-bottom: 8px; }
+    .empty-state p { color: var(--co-muted); font-size: 14px; margin-bottom: 20px; }
+    .btn-reset {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 500; color: var(--co-primary);
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        padding: 8px 18px; text-decoration: none; transition: border-color 0.15s, background 0.15s;
+    }
+    .btn-reset:hover { border-color: var(--co-primary); background: var(--co-stone); color: var(--co-primary); }
+
+    /* ── PAGINATION ── */
+    .pagination-wrap {
+        display: flex; align-items: center; justify-content: center;
+        gap: 6px; margin-top: 32px; flex-wrap: wrap;
+    }
+    .page-btn {
+        min-width: 36px; height: 36px; padding: 0 10px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        background: var(--co-canvas); font-size: 13px; color: var(--co-ink);
+        text-decoration: none; transition: all 0.14s; font-family: 'JetBrains Mono', monospace;
+    }
+    .page-btn:hover { border-color: var(--co-primary); color: var(--co-primary); background: var(--co-stone); }
+    .page-btn.active {
+        background: var(--co-primary); border-color: var(--co-primary);
+        color: #fff; font-weight: 600;
+    }
+    .page-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+    /* ── MOBILE OVERLAY ── */
+    .filter-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45); z-index: 1000;
+    }
+    .filter-overlay.open { display: block; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+        .catalog-layout { grid-template-columns: 1fr; }
+        .filter-sidebar {
+            display: none; position: fixed;
+            bottom: 0; left: 0; right: 0; top: auto;
+            z-index: 1001; border-radius: var(--r-sm) var(--r-sm) 0 0;
+            border: none; box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+            max-height: 85vh; overflow-y: auto;
+        }
+        .filter-sidebar.drawer-open { display: block; }
+        .btn-filter-mobile { display: inline-flex; }
+        .sidebar-footer { display: flex; }
+    }
+
+    @media (max-width: 480px) {
+        .product-grid { grid-template-columns: 1fr 1fr; }
+        .product-img, .product-img-ph { height: 140px; }
+        .search-wrap { max-width: none; }
+        .catalog-header { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
+    }
+</style>
+{% endblock page_css %}
+
+{% block content %}
+
+<!-- ── PAGE HEADER ── -->
+<div class="catalog-header">
+    <span class="page-eyebrow">Katalog</span>
+    <h1>
+        {% if current_category %}{{ current_category.name }}
+        {% elif query %}Hasil: "{{ query }}"
+        {% else %}Semua Produk{% endif %}
+    </h1>
+</div>
+
+<form method="get" id="filterForm">
+<div class="catalog-layout">
+
+    <!-- ════════ SIDEBAR FILTER ════════ -->
+    <aside class="filter-sidebar" id="filterSidebar">
+        <div class="sidebar-head">
+            <span class="sidebar-head-title">
+                <i class="fa-solid fa-sliders"></i> Filter
+            </span>
+            <a href="/produk/" class="sidebar-reset">Reset</a>
+        </div>
+
+        <!-- Kategori -->
+        <div class="filter-group">
+            <button type="button" class="fg-toggle" data-group="cat">
+                Kategori <i class="fa-solid fa-chevron-up fg-chevron"></i>
+            </button>
+            <div class="fg-body" id="fg-cat">
+                <label class="filter-radio">
+                    <input type="radio" name="category" value=""
+                           {% if not current_category %}checked{% endif %}
+                           onchange="submitFilter()">
+                    <span class="radio-dot"></span>
+                    <span class="radio-label">Semua</span>
+                </label>
+                {% for cat in categories %}
+                <label class="filter-radio">
+                    <input type="radio" name="category" value="{{ cat.slug }}"
+                           {% if current_category.slug == cat.slug %}checked{% endif %}
+                           onchange="submitFilter()">
+                    <span class="radio-dot"></span>
+                    <span class="radio-label">{{ cat.name }}</span>
+                    <span class="radio-count">{{ cat.product_count }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Rentang Harga -->
+        <div class="filter-group">
+            <button type="button" class="fg-toggle" data-group="price">
+                Rentang Harga <i class="fa-solid fa-chevron-up fg-chevron"></i>
+            </button>
+            <div class="fg-body" id="fg-price">
+                <div class="price-presets">
+                    <button type="button"
+                            class="price-preset-btn {% if not price_preset %}active{% endif %}"
+                            onclick="setPreset('')">
+                        <i class="fa-solid fa-infinity"></i> Semua harga
+                    </button>
+                    <button type="button"
+                            class="price-preset-btn {% if price_preset == 'low' %}active{% endif %}"
+                            onclick="setPreset('low')">
+                        <i class="fa-solid fa-chevron-down"></i> &lt; Rp 100.000
+                    </button>
+                    <button type="button"
+                            class="price-preset-btn {% if price_preset == 'mid' %}active{% endif %}"
+                            onclick="setPreset('mid')">
+                        <i class="fa-solid fa-equals"></i> Rp 100 – 500 rb
+                    </button>
+                    <button type="button"
+                            class="price-preset-btn {% if price_preset == 'high' %}active{% endif %}"
+                            onclick="setPreset('high')">
+                        <i class="fa-solid fa-chevron-up"></i> &gt; Rp 500.000
+                    </button>
+                </div>
+                <input type="hidden" name="price_preset" id="pricePresetInput" value="{{ price_preset }}">
+            </div>
+        </div>
+
+        <!-- Ketersediaan -->
+        <div class="filter-group">
+            <button type="button" class="fg-toggle" data-group="stock">
+                Ketersediaan <i class="fa-solid fa-chevron-up fg-chevron"></i>
+            </button>
+            <div class="fg-body" id="fg-stock">
+                <label class="filter-check">
+                    <input type="checkbox" name="in_stock" value="1"
+                           {% if in_stock %}checked{% endif %}
+                           onchange="submitFilter()">
+                    <span class="check-box"></span>
+                    <span>Tersedia saja</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Mobile: apply + close -->
+        <div class="sidebar-footer">
+            <button type="submit" class="btn-apply-all">Terapkan Filter</button>
+            <button type="button" class="btn-close-drawer" onclick="closeFilterDrawer()">Batal</button>
+        </div>
+    </aside>
+
+    <!-- ════════ MAIN CONTENT ════════ -->
+    <div class="catalog-main">
+
+        <!-- Topbar -->
+        <div class="catalog-topbar">
+            <div class="topbar-left">
+                <button type="button" class="btn-filter-mobile" onclick="openFilterDrawer()">
+                    <i class="fa-solid fa-sliders"></i> Filter
+                    {% if active_filter_count > 0 %}
+                    <span class="filter-badge">{{ active_filter_count }}</span>
+                    {% endif %}
+                </button>
+                <div class="search-wrap">
+                    <div class="search-field">
+                        <input type="text" name="q" placeholder="Cari produk kopi..."
+                               value="{{ query }}" autocomplete="off" id="searchInput">
+                        <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                    <div class="search-dropdown" id="searchDropdown"></div>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="filter-select-wrap">
+                    <select name="sort" class="filter-select" onchange="submitFilter()">
+                        <option value="newest"    {% if sort == 'newest'    %}selected{% endif %}>Terbaru</option>
+                        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Termurah</option>
+                        <option value="price_desc"{% if sort == 'price_desc'%}selected{% endif %}>Termahal</option>
+                        <option value="name_asc"  {% if sort == 'name_asc'  %}selected{% endif %}>Nama A–Z</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active filter chips -->
+        {% if current_category or query or in_stock or price_preset %}
+        <div class="active-chips">
+            {% if query %}
+            <span class="chip">
+                <i class="fa-solid fa-magnifying-glass"></i> {{ query }}
+                <a class="chip-remove" href="?{% if current_category %}category={{ current_category.slug }}&{% endif %}sort={{ sort }}{% if in_stock %}&in_stock=1{% endif %}{% if price_preset %}&price_preset={{ price_preset }}{% endif %}">&times;</a>
+            </span>
+            {% endif %}
+            {% if current_category %}
+            <span class="chip">
+                <i class="fa-solid fa-tag"></i> {{ current_category.name }}
+                <a class="chip-remove" href="?{% if query %}q={{ query }}&{% endif %}sort={{ sort }}{% if in_stock %}&in_stock=1{% endif %}{% if price_preset %}&price_preset={{ price_preset }}{% endif %}">&times;</a>
+            </span>
+            {% endif %}
+            {% if price_preset %}
+            <span class="chip">
+                <i class="fa-solid fa-coins"></i>
+                {% if price_preset == 'low' %}&lt; Rp 100.000
+                {% elif price_preset == 'mid' %}Rp 100.000 – 500.000
+                {% elif price_preset == 'high' %}&gt; Rp 500.000{% endif %}
+                <a class="chip-remove" href="?{% if query %}q={{ query }}&{% endif %}{% if current_category %}category={{ current_category.slug }}&{% endif %}sort={{ sort }}{% if in_stock %}&in_stock=1{% endif %}">&times;</a>
+            </span>
+            {% endif %}
+            {% if in_stock %}
+            <span class="chip chip-green">
+                <i class="fa-solid fa-circle-check"></i> Tersedia
+                <a class="chip-remove" href="?{% if query %}q={{ query }}&{% endif %}{% if current_category %}category={{ current_category.slug }}&{% endif %}sort={{ sort }}{% if price_preset %}&price_preset={{ price_preset }}{% endif %}">&times;</a>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Results count -->
+        <div class="results-divider">
+            Menampilkan <strong>{{ product_count }}</strong> produk
+            {% if current_category %}di <strong>{{ current_category.name }}</strong>{% endif %}
+        </div>
+
+        <!-- Product grid -->
+        {% if products %}
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <a href="/produk/{{ product.slug }}/" class="product-card-link" aria-label="{{ product.name }}"></a>
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                {% else %}
+                    <div class="product-img-ph"><i class="fa-solid fa-mug-hot"></i></div>
+                {% endif %}
+                <div class="product-body">
+                    <div class="product-cat-mono">
+                        {% if product.category %}{{ product.category.name }}{% else %}Produk{% endif %}
+                    </div>
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-badges">
+                        {% if product.is_in_stock %}
+                            <span class="badge-ok">
+                                <i class="fa-solid fa-circle-check" style="font-size:8px;"></i>
+                                {{ product.stock }} {{ product.unit }}
+                            </span>
+                        {% else %}
+                            <span class="badge-out">Habis</span>
+                        {% endif %}
+                        <span class="badge-moq">Min. {{ product.minimum_order }} {{ product.unit }}</span>
+                    </div>
+                    <div class="product-footer">
+                        <div class="product-price">
+                            Rp {{ product.price|rupiah }}
+                            <span class="unit">/ {{ product.unit }}</span>
+                        </div>
+                        {% if user.is_authenticated and user.is_cafe %}
+                            {% if product.is_in_stock %}
+                            <form method="post" action="/cart/add/{{ product.id }}/" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="{{ product.minimum_order }}">
+                                <button type="submit" class="btn-add-sm">
+                                    <i class="fa-solid fa-cart-plus" style="font-size:11px;"></i> Tambah
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn-add-sm" disabled>Stok Habis</button>
+                            {% endif %}
+                        {% else %}
+                            <a href="/produk/{{ product.slug }}/" class="btn-detail-sm">Lihat Detail</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination-wrap">
+            {% if page_obj.has_previous %}
+            <a class="page-btn" href="?{% if query %}q={{ query }}&{% endif %}{% if current_category %}category={{ current_category.slug }}&{% endif %}sort={{ sort }}{% if in_stock %}&in_stock=1{% endif %}{% if price_preset %}&price_preset={{ price_preset }}{% endif %}&page={{ page_obj.previous_page_number }}">
+                <i class="fa-solid fa-chevron-left" style="font-size:11px;"></i>
+            </a>
+            {% else %}
+            <span class="page-btn disabled"><i class="fa-solid fa-chevron-left" style="font-size:11px;"></i></span>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="page-btn active">{{ num }}</span>
+                {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                <a class="page-btn" href="?{% if query %}q={{ query }}&{% endif %}{% if current_category %}category={{ current_category.slug }}&{% endif %}sort={{ sort }}{% if in_stock %}&in_stock=1{% endif %}{% if price_preset %}&price_preset={{ price_preset }}{% endif %}&page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a class="page-btn" href="?{% if query %}q={{ query }}&{% endif %}{% if current_category %}category={{ current_category.slug }}&{% endif %}sort={{ sort }}{% if in_stock %}&in_stock=1{% endif %}{% if price_preset %}&price_preset={{ price_preset }}{% endif %}&page={{ page_obj.next_page_number }}">
+                <i class="fa-solid fa-chevron-right" style="font-size:11px;"></i>
+            </a>
+            {% else %}
+            <span class="page-btn disabled"><i class="fa-solid fa-chevron-right" style="font-size:11px;"></i></span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-mug-hot empty-icon"></i>
+            <h5>Tidak ada produk ditemukan</h5>
+            <p>
+                {% if query %}Tidak ada produk cocok dengan "{{ query }}".
+                {% elif in_stock %}Semua produk sedang habis stok.
+                {% elif current_category %}Belum ada produk di kategori ini.
+                {% else %}Belum ada produk tersedia.{% endif %}
+            </p>
+            <a href="/produk/" class="btn-reset">
+                <i class="fa-solid fa-rotate-left" style="font-size:11px;"></i> Reset semua filter
+            </a>
+        </div>
+        {% endif %}
+
+    </div><!-- /catalog-main -->
+</div><!-- /catalog-layout -->
+</form>
+
+<!-- Mobile overlay -->
+<div class="filter-overlay" id="filterOverlay"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+    window.submitFilter = function(){
+        document.getElementById('filterForm').submit();
+    };
+
+    window.setPreset = function(val){
+        document.getElementById('pricePresetInput').value = val;
+        submitFilter();
+    };
+
+    window.openFilterDrawer = function(){
+        document.getElementById('filterSidebar').classList.add('drawer-open');
+        document.getElementById('filterOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+    window.closeFilterDrawer = function(){
+        document.getElementById('filterSidebar').classList.remove('drawer-open');
+        document.getElementById('filterOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    };
+    document.getElementById('filterOverlay').addEventListener('click', closeFilterDrawer);
+
+    /* Collapsible sections */
+    document.querySelectorAll('.fg-toggle').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var body = document.getElementById('fg-' + this.dataset.group);
+            if (!body) return;
+            body.classList.toggle('hidden');
+            this.classList.toggle('collapsed');
+        });
+    });
+
+    /* Autocomplete */
+    var input    = document.getElementById('searchInput');
+    var dropdown = document.getElementById('searchDropdown');
+    if (!input || !dropdown) return;
+
+    function escHtml(s){
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    var timer;
+    input.addEventListener('input', function(){
+        clearTimeout(timer);
+        var q = input.value.trim();
+        if (q.length < 2){ dropdown.innerHTML=''; dropdown.classList.remove('open'); return; }
+        timer = setTimeout(function(){
+            fetch('/produk/sugesti/?q=' + encodeURIComponent(q))
+                .then(function(r){ return r.json(); })
+                .then(function(data){
+                    if (!data.results.length){ dropdown.classList.remove('open'); return; }
+                    dropdown.innerHTML = data.results.map(function(p){
+                        return '<a href="/produk/'+encodeURIComponent(p.slug)+'/" class="search-suggestion">'
+                            +'<div class="suggestion-icon"><i class="fa-solid fa-mug-hot"></i></div>'
+                            +'<div><div class="suggestion-name">'+escHtml(p.name)+'</div>'
+                            +'<div class="suggestion-cat">'+escHtml(p.category)+'</div></div></a>';
+                    }).join('');
+                    dropdown.classList.add('open');
+                });
+        }, 220);
+    });
+    document.addEventListener('click', function(e){
+        if (!input.contains(e.target) && !dropdown.contains(e.target))
+            dropdown.classList.remove('open');
+    });
+    input.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') dropdown.classList.remove('open');
+    });
+})();
+</script>
+{% endblock %}

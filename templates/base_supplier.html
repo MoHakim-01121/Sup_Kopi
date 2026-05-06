@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<style>
+    :root { --sidebar-width: 248px; }
+    body { background: #f7f7f8; }
+
+    /* ════════════════════════════════════════
+       SIDEBAR — Cohere near-black enterprise
+    ════════════════════════════════════════ */
+    .sidebar {
+        width: var(--sidebar-width);
+        background: var(--co-primary);
+        position: fixed; top: 0; left: 0;
+        height: 100vh; overflow-y: auto; z-index: 1000;
+        display: flex; flex-direction: column;
+        border-right: 1px solid rgba(255,255,255,0.05);
+    }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    /* Brand */
+    .sidebar-brand {
+        padding: 20px 20px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-brand .brand-icon {
+        width: 32px; height: 32px; border-radius: var(--r-xs);
+        background: var(--co-deep-green);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .sidebar-brand .brand-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.05rem; font-weight: 700;
+        color: #fff; letter-spacing: -0.2px; line-height: 1.1;
+    }
+    .sidebar-brand .brand-role {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; color: rgba(255,255,255,0.3);
+        letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px;
+    }
+
+    /* Section labels */
+    .sidebar-section {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; text-transform: uppercase;
+        letter-spacing: 1.5px; color: rgba(255,255,255,0.25);
+        padding: 20px 20px 6px; font-weight: 400;
+    }
+
+    /* Links */
+    .sidebar-link {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 16px; margin: 1px 8px;
+        color: rgba(255,255,255,0.55); text-decoration: none;
+        font-size: 13.5px; font-weight: 500;
+        border-radius: var(--r-xs);
+        transition: all 0.14s;
+    }
+    .sidebar-link i { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+    .sidebar-link:hover { color: #fff; background: rgba(255,255,255,0.07); }
+    .sidebar-link.active {
+        color: #fff;
+        background: rgba(255,255,255,0.1);
+        border-left: 2px solid var(--co-coral);
+        padding-left: 14px;
+    }
+    .sidebar-link-danger { color: rgba(255,100,100,0.55) !important; }
+    .sidebar-link-danger:hover { color: #fc9090 !important; background: rgba(255,80,80,0.08) !important; }
+
+    .sidebar-divider { border-color: rgba(255,255,255,0.06); margin: 8px 16px; }
+
+    /* ════════════════════════════════════════
+       MAIN CONTENT
+    ════════════════════════════════════════ */
+    .main-content {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        min-height: 100vh;
+        display: flex; flex-direction: column;
+        background: #f7f7f8;
+    }
+
+    /* ════════════════════════════════════════
+       TOPBAR — Cohere clean white
+    ════════════════════════════════════════ */
+    .topbar {
+        background: var(--co-canvas); height: 60px;
+        padding: 0 28px;
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid var(--co-hairline);
+        position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px; font-weight: 600;
+        color: var(--co-primary); letter-spacing: -0.2px;
+    }
+    .topbar-user {
+        display: flex; align-items: center; gap: 10px;
+        padding: 6px 14px; border-radius: var(--r-xs);
+        background: var(--co-canvas);
+        border: 1px solid var(--co-hairline); cursor: default;
+    }
+    .topbar-user .user-avatar {
+        width: 28px; height: 28px; border-radius: var(--r-xs);
+        background: var(--co-deep-green); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .topbar-user .user-name { font-size: 13px; font-weight: 600; color: var(--co-ink); }
+    .topbar-user .user-role {
+        font-size: 10px; color: var(--co-muted);
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: 0.5px;
+    }
+
+    /* ════════════════════════════════════════
+       PAGE CONTENT
+    ════════════════════════════════════════ */
+    .page-content { padding: 28px 30px; flex: 1; }
+
+    .page-header { margin-bottom: 24px; }
+    .page-header h4 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.3rem; font-weight: 700;
+        color: var(--co-primary); margin: 0; letter-spacing: -0.3px;
+    }
+    .page-header p { font-size: 14px; color: var(--co-muted); margin: 5px 0 0; }
+
+    /* Section cards — Cohere flat bordered */
+    .section-card {
+        background: var(--co-canvas);
+        border-radius: var(--r-sm);
+        border: 1px solid var(--co-border);
+    }
+    .section-card .section-header {
+        padding: 16px 22px;
+        border-bottom: 1px solid var(--co-border);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-card .section-title {
+        font-size: 14px; font-weight: 600;
+        color: var(--co-primary); margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+    .section-card .section-body  { padding: 20px 22px; }
+    .section-card .section-table { padding: 0; }
+
+    /* Override cards in supplier context */
+    .card {
+        border: 1px solid var(--co-border);
+        border-radius: var(--r-sm);
+        background: var(--co-canvas);
+        box-shadow: none;
+    }
+
+    /* Buttons in dashboard — small rounded rect */
+    .btn { border-radius: var(--r-xs) !important; }
+    .btn-primary, .btn-dark {
+        background: var(--co-primary) !important;
+        color: #fff !important; border: none !important;
+        border-radius: var(--r-xs) !important;
+        font-size: 13px; font-weight: 500;
+    }
+    .btn-primary:hover, .btn-dark:hover {
+        background: var(--co-primary-hover) !important; color: #fff !important;
+    }
+    .btn-outline-secondary {
+        border-radius: var(--r-xs) !important;
+        border-color: var(--co-hairline) !important;
+        color: var(--co-ink) !important;
+        font-size: 13px;
+    }
+    .btn-outline-secondary:hover {
+        background: var(--co-stone) !important;
+        border-color: var(--co-primary) !important;
+        color: var(--co-primary) !important;
+    }
+
+    /* Form focus in dashboard — violet */
+    .form-control:focus, .form-select:focus {
+        border-color: var(--co-form-focus) !important;
+        box-shadow: 0 0 0 3px rgba(155,96,170,0.12) !important;
+    }
+</style>
+
+<div style="min-height:100vh;">
+    <!-- ════ SIDEBAR ════ -->
+    <aside class="sidebar" role="navigation" aria-label="Supplier panel">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fa-solid fa-mug-hot"></i></div>
+            <div>
+                <div class="brand-text">SupKopi</div>
+                <div class="brand-role">Supplier Panel</div>
+            </div>
+        </div>
+
+        <nav style="flex:1; padding: 8px 0 20px;">
+
+            {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
+            <div class="sidebar-section">Overview</div>
+            <a href="/supplier/dashboard/"
+               class="sidebar-link {% if request.path == '/supplier/dashboard/' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </a>
+            {% endif %}
+
+            <div class="sidebar-section">Transaksi</div>
+            {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
+            <a href="/supplier/orders/"
+               class="sidebar-link {% if '/supplier/orders' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-box-open"></i> Kelola Order
+                {% if pending_orders_count %}
+                <span style="margin-left:auto; background:var(--co-coral); color:#fff;
+                             font-size:10px; font-weight:700; padding:1px 6px;
+                             border-radius:10px; font-family:'JetBrains Mono',monospace;">
+                    {{ pending_orders_count }}
+                </span>
+                {% endif %}
+            </a>
+            {% endif %}
+
+            {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
+            <div class="sidebar-section">Katalog</div>
+            <a href="/supplier/products/"
+               class="sidebar-link {% if '/supplier/products' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-bag-shopping"></i> Daftar Produk
+            </a>
+            {% endif %}
+
+            <div class="sidebar-section">Logistik</div>
+            <a href="/supplier/deliveries/"
+               class="sidebar-link {% if '/supplier/deliveries' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-truck-fast"></i> Pengiriman
+            </a>
+
+            {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
+            <div class="sidebar-section">Analitik</div>
+            <a href="/supplier/analytics/"
+               class="sidebar-link {% if '/supplier/analytics' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Demand & Prediksi
+            </a>
+            {% endif %}
+
+            <hr class="sidebar-divider">
+
+            {% if user.is_supplier %}
+            <a href="/supplier/staff/"
+               class="sidebar-link {% if '/supplier/staff' in request.path %}active{% endif %}">
+                <i class="fa-solid fa-users"></i> Kelola Staff
+            </a>
+            <a href="/admin/" class="sidebar-link" target="_blank" rel="noopener">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Admin Panel
+            </a>
+            {% endif %}
+
+            <a href="/accounts/logout/" class="sidebar-link sidebar-link-danger">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <!-- ════ MAIN ════ -->
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+            <div class="topbar-user">
+                <div class="user-avatar">{{ user.username|first|upper }}</div>
+                <div>
+                    <div class="user-name">{{ user.username }}</div>
+                    <div class="user-role">Supplier</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

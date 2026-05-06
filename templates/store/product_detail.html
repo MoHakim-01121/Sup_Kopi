@@ -1,0 +1,653 @@
+{% extends 'base_store.html' %}
+{% load socialaccount %}
+
+{% block title %}{{ product.name }} — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+/* ── Breadcrumb ──────────────────────────────────────── */
+.co-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--co-muted);margin-bottom:32px;flex-wrap:wrap;}
+.co-breadcrumb a{color:var(--co-muted);text-decoration:none;transition:color .15s;}
+.co-breadcrumb a:hover{color:var(--co-primary);}
+.co-breadcrumb .sep{color:var(--co-hairline);}
+.co-breadcrumb .current{color:var(--co-ink);font-weight:500;}
+
+/* ── Main 2-col grid ─────────────────────────────────── */
+.pd-grid{
+    display:grid;
+    grid-template-columns:minmax(0,520px) 360px;
+    gap:0 48px;
+    align-items:start;
+    margin-bottom:64px;
+}
+.pd-image-wrap{
+    grid-column:1;grid-row:1;
+    border:1px solid var(--co-hairline);
+    border-radius:var(--r-sm);overflow:hidden;
+    background:var(--co-stone);
+    aspect-ratio:1;
+    max-height:520px;
+    width:100%;
+    display:flex;align-items:center;justify-content:center;
+}
+.pd-image-wrap img{width:100%;height:100%;object-fit:cover;}
+.pd-image-placeholder{font-size:5rem;color:var(--co-muted);opacity:.22;}
+
+.pd-sidebar{grid-column:2;grid-row:1/3;}
+.pd-sticky-inner{position:sticky;top:88px;}
+
+.pd-details{grid-column:1;grid-row:2;padding-top:36px;}
+
+@media(max-width:900px){
+    .pd-grid{grid-template-columns:1fr;gap:0;}
+    .pd-image-wrap{grid-column:1;grid-row:1;max-height:none;}
+    .pd-sidebar{grid-column:1;grid-row:2;margin-top:24px;}
+    .pd-details{grid-column:1;grid-row:3;padding-top:32px;}
+    .pd-sticky-inner{position:static;}
+}
+
+/* ── Sidebar header ──────────────────────────────────── */
+.pd-cat-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;text-transform:uppercase;letter-spacing:1.2px;
+    color:var(--co-muted);display:block;margin-bottom:10px;
+}
+.pd-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(1.35rem,2.5vw,1.85rem);
+    font-weight:400;letter-spacing:-.03em;
+    color:var(--co-primary);margin-bottom:20px;line-height:1.2;
+}
+
+/* ── Price block ─────────────────────────────────────── */
+.pd-price-block{
+    border-top:1px solid var(--co-hairline);
+    border-bottom:1px solid var(--co-hairline);
+    padding:16px 0;margin-bottom:20px;
+}
+.pd-price-main{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:2rem;font-weight:400;letter-spacing:-.03em;color:var(--co-primary);
+}
+.pd-price-per{font-size:14px;color:var(--co-muted);margin-left:4px;}
+.pd-price-note{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.3px;color:var(--co-muted);margin-top:6px;
+}
+
+/* ── Badges ──────────────────────────────────────────── */
+.pd-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.pd-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;font-weight:500;
+    padding:5px 12px;border-radius:var(--r-xl);
+    letter-spacing:.3px;
+    display:inline-flex;align-items:center;gap:6px;
+}
+.pd-badge-ok {background:#edfce9;color:var(--co-deep-green);border:1px solid #a7f3c0;}
+.pd-badge-out{background:#fff1f0;color:var(--co-error);border:1px solid #fecaca;}
+.pd-badge-moq{background:var(--co-stone);color:var(--co-ink);border:1px solid var(--co-hairline);}
+
+/* ── Order card ──────────────────────────────────────── */
+.pd-order-card{
+    background:var(--co-stone);
+    border:1px solid var(--co-hairline);
+    border-radius:var(--r-sm);
+    padding:20px;margin-bottom:12px;
+}
+.pd-form-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;text-transform:uppercase;
+    letter-spacing:1px;color:var(--co-muted);
+    display:block;margin-bottom:8px;
+}
+.qty-stepper{
+    display:flex;align-items:center;
+    border:1px solid var(--co-hairline);
+    border-radius:var(--r-xs);overflow:hidden;
+    background:var(--co-canvas);width:fit-content;
+}
+.qty-btn{
+    width:40px;height:44px;border:none;background:transparent;
+    cursor:pointer;color:var(--co-ink);font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s;
+}
+.qty-btn:hover{background:var(--co-hairline);}
+.qty-btn:disabled{opacity:.3;cursor:not-allowed;}
+.qty-input{
+    width:72px;height:44px;border:none;
+    border-left:1px solid var(--co-hairline);
+    border-right:1px solid var(--co-hairline);
+    text-align:center;font-size:15px;font-weight:600;
+    color:var(--co-primary);background:var(--co-canvas);
+    outline:none;-moz-appearance:textfield;appearance:textfield;
+}
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;}
+.pd-subtotal{
+    margin-top:14px;padding-top:14px;
+    border-top:1px solid var(--co-hairline);
+    display:flex;justify-content:space-between;align-items:center;
+}
+.pd-subtotal-label{font-size:13px;color:var(--co-muted);}
+.pd-subtotal-val{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px;font-weight:600;color:var(--co-primary);
+}
+.btn-add-cart{
+    display:block;width:100%;
+    background:var(--co-primary);color:#fff;
+    border:none;border-radius:var(--r-sm);
+    padding:13px 24px;font-size:15px;font-weight:500;
+    cursor:pointer;margin-top:16px;
+    transition:background .15s,transform .1s;
+    letter-spacing:.01em;
+}
+.btn-add-cart:hover{background:var(--co-primary-hover);transform:scale(.99);}
+.btn-add-cart:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* Trust items */
+.pd-trust{display:flex;flex-direction:column;gap:7px;padding-top:12px;}
+.pd-trust-item{
+    display:flex;align-items:center;gap:10px;
+    font-size:12px;color:var(--co-body-muted);
+}
+.pd-trust-item i{width:14px;text-align:center;color:var(--co-deep-green);font-size:11px;}
+
+/* Out-of-stock panel */
+.pd-oos-panel{
+    background:var(--co-stone);
+    border:1px solid var(--co-hairline);
+    border-radius:var(--r-sm);
+    padding:28px 24px;text-align:center;
+}
+.pd-oos-icon{font-size:2.2rem;opacity:.25;margin-bottom:12px;}
+.pd-oos-title{font-size:15px;font-weight:600;color:var(--co-primary);margin-bottom:6px;}
+.pd-oos-text{font-size:13px;color:var(--co-muted);margin-bottom:0;}
+
+/* Login modal */
+.login-modal-overlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.45);z-index:9999;
+    align-items:center;justify-content:center;
+    padding:20px;
+}
+.login-modal-overlay.active{display:flex;}
+.login-modal{
+    background:#fff;border-radius:var(--r-md);
+    width:100%;max-width:420px;
+    padding:36px;position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,.18);
+    animation:modalIn .2s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+.login-modal-close{
+    position:absolute;top:16px;right:18px;
+    background:none;border:none;cursor:pointer;
+    font-size:18px;color:var(--co-muted);line-height:1;
+}
+.login-modal-close:hover{color:var(--co-ink);}
+
+/* ── Detail sections ─────────────────────────────────── */
+.pd-section{margin-bottom:36px;}
+.pd-section-heading{
+    display:flex;align-items:center;gap:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--co-muted);
+    margin-bottom:16px;padding-bottom:10px;
+    border-bottom:1px solid var(--co-hairline);
+}
+.pd-section-heading::before{
+    content:'';display:block;
+    width:3px;height:14px;
+    background:var(--co-deep-green);border-radius:2px;
+    flex-shrink:0;
+}
+.pd-desc-text{font-size:15px;color:var(--co-body-muted);line-height:1.72;}
+
+/* Specs table */
+.pd-specs{width:100%;border-collapse:collapse;}
+.pd-specs tr{border-bottom:1px solid var(--co-hairline);}
+.pd-specs tr:last-child{border-bottom:none;}
+.pd-specs td{padding:12px 0;font-size:14px;vertical-align:middle;}
+.pd-specs td:first-child{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;text-transform:uppercase;
+    letter-spacing:.8px;color:var(--co-muted);
+    width:40%;padding-right:12px;
+}
+.pd-specs td:last-child{color:var(--co-ink);font-weight:500;}
+.spec-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--co-stone);
+    border:1px solid var(--co-hairline);
+    border-radius:var(--r-xl);
+    padding:3px 10px;font-size:12px;font-weight:500;
+    color:var(--co-ink);
+}
+
+/* Info tiles */
+.pd-info-strip{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+@media(max-width:600px){.pd-info-strip{grid-template-columns:1fr 1fr;}}
+.pd-info-tile{
+    border:1px solid var(--co-hairline);
+    border-radius:var(--r-sm);padding:16px 14px;text-align:center;
+}
+.pd-info-tile i{font-size:1.15rem;color:var(--co-deep-green);margin-bottom:8px;display:block;}
+.pd-info-tile-title{font-size:13px;font-weight:600;color:var(--co-primary);margin-bottom:3px;}
+.pd-info-tile-text{font-size:11px;color:var(--co-muted);line-height:1.4;}
+
+/* ── Related products ────────────────────────────────── */
+.pd-related{border-top:1px solid var(--co-hairline);padding-top:48px;margin-top:8px;}
+.pd-related-header{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin-bottom:24px;
+}
+.pd-related-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.15rem;font-weight:400;letter-spacing:-.02em;color:var(--co-primary);
+}
+.pd-related-more{font-size:13px;color:var(--co-muted);text-decoration:none;transition:color .15s;}
+.pd-related-more:hover{color:var(--co-primary);}
+.pd-related-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+}
+@media(max-width:900px){.pd-related-grid{grid-template-columns:repeat(2,1fr);}}
+
+.rel-card{
+    border:1px solid var(--co-hairline);
+    border-radius:var(--r-sm);overflow:hidden;
+    text-decoration:none;color:inherit;
+    transition:border-color .15s,box-shadow .15s;
+    display:block;
+}
+.rel-card:hover{border-color:var(--co-primary);box-shadow:0 4px 16px rgba(0,0,0,.06);}
+.rel-card-img{
+    aspect-ratio:1;background:var(--co-stone);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.rel-card-img img{width:100%;height:100%;object-fit:cover;}
+.rel-placeholder{font-size:2rem;color:var(--co-muted);opacity:.25;}
+.rel-card-body{padding:12px 14px;}
+.rel-card-name{
+    font-size:13px;font-weight:500;color:var(--co-primary);
+    margin-bottom:5px;line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.rel-card-price{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;font-weight:400;color:var(--co-deep-green);
+}
+.rel-card-unit{font-size:11px;color:var(--co-muted);}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="co-breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    <span class="sep">/</span>
+    <a href="/produk/">Produk</a>
+    {% if product.category %}
+    <span class="sep">/</span>
+    <a href="/kategori/{{ product.category.slug }}/">{{ product.category.name }}</a>
+    {% endif %}
+    <span class="sep">/</span>
+    <span class="current">{{ product.name }}</span>
+</nav>
+
+<!-- Main product grid -->
+<div class="pd-grid">
+
+    <!-- Col 1 Row 1: Image -->
+    <div class="pd-image-wrap">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% else %}
+            <div class="pd-image-placeholder"><i class="fa-solid fa-mug-hot"></i></div>
+        {% endif %}
+    </div>
+
+    <!-- Col 2 Row 1–2: Sticky purchase panel -->
+    <div class="pd-sidebar">
+        <div class="pd-sticky-inner">
+
+            {% if product.category %}
+                <span class="pd-cat-label">{{ product.category.name }}</span>
+            {% endif %}
+            <h1 class="pd-title">{{ product.name }}</h1>
+
+            <!-- Price -->
+            <div class="pd-price-block">
+                <span class="pd-price-main">Rp {{ product.price|floatformat:0 }}</span>
+                <span class="pd-price-per">/ {{ product.unit }}</span>
+                <div class="pd-price-note">Harga grosir · min. order {{ product.minimum_order }} {{ product.unit }}</div>
+            </div>
+
+            <!-- Stock + MOQ badges -->
+            <div class="pd-badges">
+                {% if product.is_in_stock %}
+                    <span class="pd-badge pd-badge-ok">
+                        <i class="fa-solid fa-circle-check" style="font-size:10px;"></i>
+                        {{ product.stock }} {{ product.unit }} tersedia
+                    </span>
+                {% else %}
+                    <span class="pd-badge pd-badge-out">
+                        <i class="fa-solid fa-circle-xmark" style="font-size:10px;"></i>
+                        Stok habis
+                    </span>
+                {% endif %}
+                <span class="pd-badge pd-badge-moq">
+                    <i class="fa-solid fa-box" style="font-size:10px;"></i>
+                    Min. {{ product.minimum_order }} {{ product.unit }}
+                </span>
+            </div>
+
+            <!-- Action block -->
+            {% if user.is_authenticated and user.is_cafe %}
+                {% if product.is_in_stock %}
+                <div class="pd-order-card">
+                    <form method="post" action="/cart/add/{{ product.id }}/" id="addToCartForm">
+                        {% csrf_token %}
+                        <span class="pd-form-label">Jumlah Pesanan</span>
+                        <div class="qty-stepper">
+                            <button type="button" class="qty-btn" id="qtyMinus" aria-label="Kurangi">&#8722;</button>
+                            <input type="number" name="quantity" id="qtyInput"
+                                   class="qty-input"
+                                   value="{{ product.minimum_order }}"
+                                   min="{{ product.minimum_order }}"
+                                   max="{{ product.stock }}"
+                                   data-price="{{ product.price }}"
+                                   data-moq="{{ product.minimum_order }}"
+                                   data-stock="{{ product.stock }}"
+                                   aria-label="Jumlah">
+                            <button type="button" class="qty-btn" id="qtyPlus" aria-label="Tambah">&#43;</button>
+                        </div>
+                        <div class="pd-subtotal">
+                            <span class="pd-subtotal-label">Subtotal estimasi</span>
+                            <span class="pd-subtotal-val" id="subtotalDisplay">
+                                Rp {{ product.price|floatformat:0 }}
+                            </span>
+                        </div>
+                        <button type="submit" class="btn-add-cart">
+                            <i class="fa-solid fa-cart-plus me-2"></i>Tambah ke Keranjang
+                        </button>
+                    </form>
+                </div>
+                <div class="pd-trust">
+                    <div class="pd-trust-item"><i class="fa-solid fa-truck-fast"></i> Pengiriman ke seluruh zona layanan</div>
+                    <div class="pd-trust-item"><i class="fa-solid fa-shield-halved"></i> Pembayaran aman via Midtrans</div>
+                    <div class="pd-trust-item"><i class="fa-solid fa-rotate-left"></i> Hubungi kami jika ada masalah pesanan</div>
+                </div>
+                {% else %}
+                <div class="pd-oos-panel">
+                    <div class="pd-oos-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <div class="pd-oos-title">Stok Sedang Habis</div>
+                    <p class="pd-oos-text">Produk ini sedang tidak tersedia. Hubungi kami untuk informasi restock terbaru.</p>
+                </div>
+                {% endif %}
+            {% elif not user.is_authenticated %}
+                {% if product.is_in_stock %}
+                <div class="pd-order-card">
+                    <span class="pd-form-label">Jumlah Pesanan</span>
+                    <div class="qty-stepper">
+                        <button type="button" class="qty-btn" id="qtyMinus" aria-label="Kurangi">&#8722;</button>
+                        <input type="number" id="qtyInput" class="qty-input"
+                               value="{{ product.minimum_order }}"
+                               min="{{ product.minimum_order }}"
+                               max="{{ product.stock }}"
+                               data-price="{{ product.price }}"
+                               data-moq="{{ product.minimum_order }}"
+                               data-stock="{{ product.stock }}"
+                               aria-label="Jumlah">
+                        <button type="button" class="qty-btn" id="qtyPlus" aria-label="Tambah">&#43;</button>
+                    </div>
+                    <div class="pd-subtotal">
+                        <span class="pd-subtotal-label">Subtotal estimasi</span>
+                        <span class="pd-subtotal-val" id="subtotalDisplay">
+                            Rp {{ product.price|floatformat:0 }}
+                        </span>
+                    </div>
+                    <button type="button" class="btn-add-cart" onclick="openLoginModal()">
+                        <i class="fa-solid fa-cart-plus me-2"></i>Tambah ke Keranjang
+                    </button>
+                </div>
+                <div class="pd-trust">
+                    <div class="pd-trust-item"><i class="fa-solid fa-truck-fast"></i> Pengiriman ke seluruh zona layanan</div>
+                    <div class="pd-trust-item"><i class="fa-solid fa-shield-halved"></i> Pembayaran aman via Midtrans</div>
+                    <div class="pd-trust-item"><i class="fa-solid fa-rotate-left"></i> Hubungi kami jika ada masalah pesanan</div>
+                </div>
+                {% else %}
+                <div class="pd-oos-panel">
+                    <div class="pd-oos-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <div class="pd-oos-title">Stok Sedang Habis</div>
+                    <p class="pd-oos-text">Produk ini sedang tidak tersedia.</p>
+                </div>
+                {% endif %}
+            {% endif %}
+
+        </div><!-- /.pd-sticky-inner -->
+    </div><!-- /.pd-sidebar -->
+
+    <!-- Col 1 Row 2: Description + Specs -->
+    <div class="pd-details">
+
+        <!-- Description -->
+        <div class="pd-section">
+            <div class="pd-section-heading">Deskripsi Produk</div>
+            <p class="pd-desc-text">{{ product.description }}</p>
+        </div>
+
+        <!-- Specifications -->
+        <div class="pd-section">
+            <div class="pd-section-heading">Spesifikasi</div>
+            <table class="pd-specs">
+                {% if product.category %}
+                <tr>
+                    <td>Kategori</td>
+                    <td>
+                        <span class="spec-chip">
+                            <i class="fa-solid fa-tag" style="font-size:10px;color:var(--co-deep-green);"></i>
+                            {{ product.category.name }}
+                        </span>
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td>Satuan</td>
+                    <td>{{ product.unit }}</td>
+                </tr>
+                <tr>
+                    <td>Minimum Order</td>
+                    <td>{{ product.minimum_order }} {{ product.unit }}</td>
+                </tr>
+                <tr>
+                    <td>Ketersediaan</td>
+                    <td>
+                        {% if product.is_in_stock %}
+                            <span style="color:var(--co-deep-green);font-weight:600;">{{ product.stock }} {{ product.unit }}</span>
+                        {% else %}
+                            <span style="color:var(--co-error);font-weight:600;">Stok habis</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Highlights -->
+        <div class="pd-section">
+            <div class="pd-section-heading">Keunggulan</div>
+            <div class="pd-info-strip">
+                <div class="pd-info-tile">
+                    <i class="fa-solid fa-seedling"></i>
+                    <div class="pd-info-tile-title">Kualitas Terjamin</div>
+                    <div class="pd-info-tile-text">Dipilih langsung dari petani terpercaya</div>
+                </div>
+                <div class="pd-info-tile">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <div class="pd-info-tile-title">Kemasan Grosir</div>
+                    <div class="pd-info-tile-text">Cocok untuk kebutuhan kafe harian</div>
+                </div>
+                <div class="pd-info-tile">
+                    <i class="fa-solid fa-snowflake"></i>
+                    <div class="pd-info-tile-title">Tips Penyimpanan</div>
+                    <div class="pd-info-tile-text">Simpan di tempat sejuk, kering, jauh dari sinar matahari</div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.pd-details -->
+</div><!-- /.pd-grid -->
+
+<!-- Related products -->
+{% if related_products %}
+<div class="pd-related">
+    <div class="pd-related-header">
+        <h2 class="pd-related-title">Produk Serupa</h2>
+        {% if product.category %}
+        <a href="/kategori/{{ product.category.slug }}/" class="pd-related-more">
+            Lihat semua {{ product.category.name }} <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>
+        </a>
+        {% endif %}
+    </div>
+    <div class="pd-related-grid">
+        {% for rel in related_products %}
+        <a href="/produk/{{ rel.slug }}/" class="rel-card">
+            <div class="rel-card-img">
+                {% if rel.image %}
+                    <img src="{{ rel.image.url }}" alt="{{ rel.name }}">
+                {% else %}
+                    <div class="rel-placeholder"><i class="fa-solid fa-mug-hot"></i></div>
+                {% endif %}
+            </div>
+            <div class="rel-card-body">
+                <div class="rel-card-name">{{ rel.name }}</div>
+                <div>
+                    <span class="rel-card-price">Rp {{ rel.price|floatformat:0 }}</span>
+                    <span class="rel-card-unit"> / {{ rel.unit }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Login Modal -->
+{% if not user.is_authenticated %}
+<div class="login-modal-overlay" id="loginModalOverlay" onclick="closeOnOverlay(event)">
+    <div class="login-modal">
+        <button class="login-modal-close" onclick="closeLoginModal()" aria-label="Tutup">&times;</button>
+
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="font-size:1.6rem; color:var(--co-primary); margin-bottom:10px;">
+                <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <h2 style="font-size:1.2rem; font-weight:700; color:var(--co-primary); margin:0 0 4px; letter-spacing:-.02em;">
+                Masuk untuk Memesan
+            </h2>
+            <p style="font-size:13px; color:var(--co-muted); margin:0;">
+                Bergabung sebagai kafe untuk mulai berbelanja
+            </p>
+        </div>
+
+        <!-- Google -->
+        <a href="{% provider_login_url 'google' %}?next={{ request.path }}"
+           style="display:flex;align-items:center;justify-content:center;gap:10px;
+                  border:1.5px solid var(--co-hairline);border-radius:var(--r-xs);
+                  padding:11px;font-size:14px;font-weight:500;color:var(--co-ink);
+                  background:#fff;text-decoration:none;margin-bottom:16px;
+                  transition:border-color .15s;"
+           onmouseover="this.style.borderColor='var(--co-primary)'"
+           onmouseout="this.style.borderColor='var(--co-hairline)'">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Masuk dengan Google
+        </a>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="flex:1;height:1px;background:var(--co-hairline);"></div>
+            <span style="font-size:11px;color:var(--co-muted);">atau</span>
+            <div style="flex:1;height:1px;background:var(--co-hairline);"></div>
+        </div>
+
+        <form method="post" action="/accounts/login/">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <div class="mb-3">
+                <input type="text" name="username" class="form-control"
+                       placeholder="Username" autofocus required>
+            </div>
+            <div class="mb-3">
+                <input type="password" name="password" class="form-control"
+                       placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn-add-cart" style="margin-top:0;">
+                <i class="fa-solid fa-right-to-bracket me-2"></i>Masuk
+            </button>
+        </form>
+
+        <p style="text-align:center;margin-top:16px;margin-bottom:0;font-size:13px;color:var(--co-muted);">
+            Belum punya akun?
+            <a href="/accounts/register/" style="color:var(--co-primary);font-weight:600;">Daftar</a>
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openLoginModal() {
+    document.getElementById('loginModalOverlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeLoginModal() {
+    document.getElementById('loginModalOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+function closeOnOverlay(e) {
+    if (e.target === document.getElementById('loginModalOverlay')) closeLoginModal();
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLoginModal();
+});
+
+(function () {
+    const input    = document.getElementById('qtyInput');
+    const minusBtn = document.getElementById('qtyMinus');
+    const plusBtn  = document.getElementById('qtyPlus');
+    const subtotal = document.getElementById('subtotalDisplay');
+    if (!input) return;
+
+    const price = parseFloat(input.dataset.price);
+    const moq   = parseInt(input.dataset.moq, 10);
+    const stock = parseInt(input.dataset.stock, 10);
+
+    function fmt(n) {
+        return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    }
+    function update() {
+        let val = parseInt(input.value) || moq;
+        if (val < moq) val = moq;
+        if (val > stock) val = stock;
+        input.value = val;
+        if (subtotal) subtotal.textContent = fmt(price * val);
+        if (minusBtn) minusBtn.disabled = val <= moq;
+    }
+    minusBtn && minusBtn.addEventListener('click', () => { input.value = parseInt(input.value) - 1; update(); });
+    plusBtn  && plusBtn.addEventListener('click',  () => { input.value = parseInt(input.value) + 1; update(); });
+    input.addEventListener('change', update);
+    update();
+})();
+</script>
+{% endblock %}

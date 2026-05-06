@@ -1,0 +1,70 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Buat Akun Staff – Sup Kopi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" style="padding: 40px 0 60px;">
+    <div class="col-md-5 col-sm-10">
+
+        <div class="text-center mb-4">
+            <div style="font-size:2rem; color:var(--co-primary);">
+                <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <h2 style="font-size:1.4rem; font-weight:700; color:var(--co-primary); letter-spacing:-0.3px; margin:10px 0 4px;">
+                Buat Akun Staff
+            </h2>
+            <p style="font-size:0.875rem; color:var(--co-muted);">
+                Kamu diundang sebagai
+                <strong style="color:var(--co-ink);">{{ invitation.get_role_display }}</strong>
+                di Sup Kopi
+            </p>
+            <div style="font-size:12px; color:var(--co-muted); margin-top:2px;">
+                Email: <strong>{{ invitation.email }}</strong>
+            </div>
+        </div>
+
+        <div class="card" style="border-radius:var(--r-md);">
+            <div class="card-body" style="padding:32px;">
+
+                {% if errors %}
+                <div class="alert" style="background:#fff1f0; border:1px solid #fecaca; border-radius:var(--r-xs); padding:12px 16px; margin-bottom:20px;">
+                    {% for error in errors %}
+                    <div style="font-size:13px; color:var(--co-error);">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>{{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control"
+                               value="{{ username|default:'' }}"
+                               placeholder="Pilih username unik" autofocus required>
+                        <div style="font-size:11px; color:var(--co-muted); margin-top:4px;">
+                            Digunakan untuk login. Tidak bisa diubah setelah dibuat.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control"
+                               placeholder="Min. 8 karakter" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Konfirmasi Password</label>
+                        <input type="password" name="password2" class="form-control"
+                               placeholder="Ulangi password" required>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100" style="padding:12px;">
+                        <i class="fa-solid fa-check me-2"></i>Aktivasi Akun
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

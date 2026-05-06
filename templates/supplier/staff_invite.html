@@ -1,0 +1,85 @@
+{% extends 'base_supplier.html' %}
+
+{% block title %}Undang Staff – Sup Kopi{% endblock %}
+{% block page_title %}Undang Staff{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="section-card">
+            <div class="section-header">
+                <h5 class="section-title">Kirim Undangan</h5>
+                <a href="/supplier/staff/" class="btn btn-sm btn-outline-secondary">
+                    <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i> Kembali
+                </a>
+            </div>
+            <div class="section-body">
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Email Staff</label>
+                        <input type="email" name="email" class="form-control" required
+                               placeholder="email@staff.com" autofocus>
+                        <div style="font-size:11px; color:var(--co-muted); margin-top:4px;">
+                            Link undangan akan dikirim ke email ini. Berlaku selama 48 jam.
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Role</label>
+                        <select name="role" class="form-select">
+                            {% for val, label in roles %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Kirim Undangan
+                    </button>
+                </form>
+
+                <div style="margin-top:20px; padding:14px 16px; background:var(--co-stone);
+                            border-radius:var(--r-xs); font-size:12px; color:var(--co-muted);">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Staff akan menerima email berisi link untuk membuat username dan password mereka sendiri.
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="section-card">
+            <div class="section-header">
+                <h5 class="section-title">Panduan Role</h5>
+            </div>
+            <div class="section-body">
+                <div class="mb-3 pb-3" style="border-bottom:1px solid var(--co-hairline);">
+                    <div style="font-size:13px; font-weight:600; color:var(--co-ink); margin-bottom:6px;">
+                        <span class="badge badge-confirmed me-2">Admin Order</span>
+                    </div>
+                    <ul style="font-size:12px; color:var(--co-muted); margin:0; padding-left:16px; line-height:1.8;">
+                        <li>Kelola & konfirmasi order masuk</li>
+                        <li>Kelola daftar produk</li>
+                        <li>Lihat dashboard & analitik</li>
+                        <li>Input & update pengiriman</li>
+                    </ul>
+                </div>
+                <div>
+                    <div style="font-size:13px; font-weight:600; color:var(--co-ink); margin-bottom:6px;">
+                        <span class="badge badge-processing me-2">Logistik</span>
+                    </div>
+                    <ul style="font-size:12px; color:var(--co-muted); margin:0; padding-left:16px; line-height:1.8;">
+                        <li>Akses khusus halaman Pengiriman</li>
+                        <li>Input resi & update status kirim</li>
+                        <li>Upload foto bukti pengiriman</li>
+                        <li>Tidak bisa kelola order/produk</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

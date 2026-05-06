@@ -1,0 +1,212 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Konfirmasi Order — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    /* Card icon */
+    .co-card-header .card-icon {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: var(--co-primary); color: #fff;
+        font-size: 10px;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* Order item rows */
+    .order-item {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding: 10px 0; border-bottom: 1px solid var(--co-border); gap: 12px;
+    }
+    .order-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .order-item .item-name { font-size: 14px; color: var(--co-ink); flex: 1; }
+    .order-item .item-qty {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; color: var(--co-muted); white-space: nowrap; margin-right: 16px;
+    }
+    .order-item .item-price { font-size: 14px; font-weight: 500; color: var(--co-primary); white-space: nowrap; }
+
+    /* Shipping info */
+    .shipping-info-row {
+        display: flex; gap: 12px; margin-bottom: 10px;
+    }
+    .shipping-info-row:last-child { margin-bottom: 0; }
+    .si-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; text-transform: uppercase;
+        letter-spacing: 0.8px; color: var(--co-muted);
+        width: 80px; flex-shrink: 0; padding-top: 1px;
+    }
+    .si-value { font-size: 14px; color: var(--co-ink); }
+    .si-value strong { color: var(--co-primary); }
+    .zone-eta-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; background: var(--co-stone);
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xl); padding: 2px 8px;
+        color: var(--co-muted); display: inline-block; margin-top: 4px;
+    }
+
+    /* Notes textarea */
+    .notes-textarea {
+        width: 100%; border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); padding: 12px 14px;
+        font-size: 14px; line-height: 1.55; color: var(--co-ink);
+        background: var(--co-canvas); resize: vertical; min-height: 72px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+    }
+    .notes-textarea:focus {
+        border-color: var(--co-form-focus);
+        box-shadow: 0 0 0 3px rgba(155,96,170,0.12); outline: none;
+    }
+    .notes-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--co-muted);
+        display: block; margin-bottom: 8px;
+    }
+
+    /* Summary card sticky override */
+    .summary-card { position: sticky; top: 80px; }
+
+    .btn-confirm {
+        display: block; width: 100%;
+        background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-sm);
+        padding: 13px; font-size: 14px; font-weight: 500;
+        cursor: pointer; transition: background 0.15s;
+    }
+    .btn-confirm:hover { background: var(--co-primary-hover); }
+    .btn-back {
+        display: block; text-align: center; margin-top: 10px;
+        font-size: 13px; color: var(--co-muted); text-decoration: none;
+        transition: color 0.15s;
+    }
+    .btn-back:hover { color: var(--co-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Step indicator -->
+<div class="checkout-steps">
+    <div class="step done">
+        <div class="step-num"><i class="fa-solid fa-check" style="font-size:9px;"></i></div>
+        <div class="step-label">Keranjang</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step done">
+        <div class="step-num"><i class="fa-solid fa-check" style="font-size:9px;"></i></div>
+        <div class="step-label">Pengiriman</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+        <div class="step-num">3</div>
+        <div class="step-label">Konfirmasi</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step pending">
+        <div class="step-num">4</div>
+        <div class="step-label">Pembayaran</div>
+    </div>
+</div>
+
+<span class="page-eyebrow">Checkout</span>
+<h1 class="page-title">Konfirmasi Order</h1>
+
+<form method="post" action="/orders/confirm/">
+    {% csrf_token %}
+    <div class="row g-4">
+
+        <!-- Left: Items + Shipping + Notes -->
+        <div class="col-lg-7">
+
+            <!-- Produk Dipesan -->
+            <div class="co-card">
+                <div class="co-card-header">
+                    <div class="card-icon"><i class="fa-solid fa-box" style="font-size:9px;"></i></div>
+                    <div class="card-title">Produk Dipesan</div>
+                </div>
+                <div class="co-card-body">
+                    {% for item in cart.items.all %}
+                    <div class="order-item">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-qty">×{{ item.quantity }} {{ item.product.unit }}</div>
+                        <div class="item-price">Rp {{ item.subtotal|floatformat:0 }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Info Pengiriman -->
+            <div class="co-card">
+                <div class="co-card-header">
+                    <div class="card-icon"><i class="fa-solid fa-truck" style="font-size:9px;"></i></div>
+                    <div class="card-title">Info Pengiriman</div>
+                </div>
+                <div class="co-card-body">
+                    <div class="shipping-info-row">
+                        <span class="si-label">Zona</span>
+                        <div class="si-value">
+                            <strong>{{ zone.name }}</strong>
+                            <div class="zone-eta-badge">{{ zone.delivery_estimate_display }}</div>
+                        </div>
+                    </div>
+                    <div class="shipping-info-row">
+                        <span class="si-label">Alamat</span>
+                        <span class="si-value">{{ shipping_address }}</span>
+                    </div>
+                    <div class="shipping-info-row">
+                        <span class="si-label">Ongkir</span>
+                        <span class="si-value"><strong>Rp {{ zone.shipping_cost|floatformat:0 }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Catatan -->
+            <div class="co-card">
+                <div class="co-card-header">
+                    <div class="card-icon"><i class="fa-solid fa-pen" style="font-size:9px;"></i></div>
+                    <div class="card-title">Catatan untuk Supplier</div>
+                </div>
+                <div class="co-card-body">
+                    <label class="notes-label" for="notes">Catatan (opsional)</label>
+                    <textarea name="notes" id="notes" class="notes-textarea"
+                        placeholder="Instruksi khusus, waktu pengiriman, atau info tambahan..."></textarea>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right: Price summary -->
+        <div class="col-lg-5">
+            <div class="summary-card">
+                <div class="summary-header">Rincian Pembayaran</div>
+                <div class="summary-body">
+                    <div class="summary-row">
+                        <span class="label">Subtotal produk</span>
+                        <span class="value">Rp {{ cart.subtotal|floatformat:0 }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Ongkos kirim</span>
+                        <span class="value">Rp {{ zone.shipping_cost|floatformat:0 }}</span>
+                    </div>
+                    <hr class="summary-divider">
+                    <div class="summary-total">
+                        <span class="label">Total</span>
+                        <span class="value">Rp {{ total|floatformat:0 }}</span>
+                    </div>
+                    <button type="submit" class="btn-confirm">
+                        Konfirmasi & Lanjut Bayar <i class="fa-solid fa-arrow-right ms-2" style="font-size:12px;"></i>
+                    </button>
+                    <a href="/cart/checkout/" class="btn-back">
+                        <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i>Edit Pengiriman
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+{% endblock %}

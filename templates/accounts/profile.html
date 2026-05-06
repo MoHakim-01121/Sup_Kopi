@@ -1,0 +1,72 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Profil – Sup Kopi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" style="padding: 20px 0 60px;">
+    <div class="col-md-6">
+
+        <span class="page-eyebrow">Akun</span>
+        <h1 class="page-title">Profil Saya</h1>
+
+        <!-- Informasi Akun -->
+        <div class="co-card mb-3">
+            <div class="co-card-header">
+                <div class="card-icon"><i class="fa-solid fa-user" style="font-size:9px;"></i></div>
+                <div class="card-title">Informasi Akun</div>
+            </div>
+            <div class="co-card-body">
+                <div class="shipping-info-row">
+                    <span class="si-label">Username</span>
+                    <span class="si-value">{{ user.username }}</span>
+                </div>
+                <div class="shipping-info-row">
+                    <span class="si-label">Email</span>
+                    <span class="si-value">{{ user.email|default:"—" }}</span>
+                </div>
+                <div class="shipping-info-row">
+                    <span class="si-label">No. HP</span>
+                    <span class="si-value">{{ user.phone|default:"—" }}</span>
+                </div>
+                <div class="shipping-info-row">
+                    <span class="si-label">Role</span>
+                    <span class="si-value">{{ user.get_role_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if profile %}
+        <!-- Informasi Kafe -->
+        <div class="co-card">
+            <div class="co-card-header">
+                <div class="card-icon"><i class="fa-solid fa-store" style="font-size:9px;"></i></div>
+                <div class="card-title">Informasi Kafe</div>
+            </div>
+            <div class="co-card-body">
+                <div class="shipping-info-row">
+                    <span class="si-label">Nama Kafe</span>
+                    <span class="si-value"><strong>{{ profile.cafe_name }}</strong></span>
+                </div>
+                <div class="shipping-info-row">
+                    <span class="si-label">Alamat</span>
+                    <span class="si-value">{{ profile.address|default:"—" }}</span>
+                </div>
+                <div class="shipping-info-row">
+                    <span class="si-label">Kota</span>
+                    <span class="si-value">{{ profile.city|default:"—" }}</span>
+                </div>
+                <div class="shipping-info-row">
+                    <span class="si-label">Provinsi</span>
+                    <span class="si-value">{{ profile.province|default:"—" }}</span>
+                </div>
+                <div class="shipping-info-row">
+                    <span class="si-label">Kode Pos</span>
+                    <span class="si-value">{{ profile.postal_code|default:"—" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

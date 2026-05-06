@@ -1,0 +1,162 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Pembayaran Berhasil — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    .success-wrap {
+        max-width: 480px; margin: 48px auto; text-align: center;
+    }
+
+    /* Success icon */
+    .success-icon-ring {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: #ecfdf5; border: 2px solid #a7f3d0;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 24px;
+    }
+    .success-icon-ring i {
+        font-size: 2rem; color: var(--co-deep-green);
+    }
+
+    .success-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.6rem; font-weight: 400;
+        letter-spacing: -0.03em; color: var(--co-primary);
+        margin-bottom: 10px;
+    }
+    .success-sub {
+        font-size: 15px; color: var(--co-body-muted);
+        line-height: 1.6; margin-bottom: 6px;
+    }
+    .order-num-pill {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px; font-weight: 600;
+        background: var(--co-stone); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); padding: 5px 14px;
+        color: var(--co-primary); margin: 12px 0 24px;
+    }
+
+    /* Info card */
+    .info-card {
+        background: var(--co-canvas);
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); padding: 20px 24px;
+        margin-bottom: 24px; text-align: left;
+    }
+    .info-card-row {
+        display: flex; gap: 12px; margin-bottom: 10px;
+    }
+    .info-card-row:last-child { margin-bottom: 0; }
+    .ic-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;
+        color: var(--co-muted); width: 100px; flex-shrink: 0; padding-top: 1px;
+    }
+    .ic-value { font-size: 14px; color: var(--co-ink); }
+    .ic-value strong { color: var(--co-primary); }
+
+    /* CTAs */
+    .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary-co {
+        background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-sm);
+        padding: 11px 22px; font-size: 14px; font-weight: 500;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: background 0.15s;
+    }
+    .btn-primary-co:hover { background: var(--co-primary-hover); color: #fff; }
+    .btn-outline-co {
+        background: transparent; color: var(--co-primary);
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        padding: 11px 22px; font-size: 14px; font-weight: 500;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: border-color 0.15s;
+    }
+    .btn-outline-co:hover { border-color: var(--co-primary); }
+
+    /* Next steps strip */
+    .next-steps {
+        border: 1px solid var(--co-hairline); border-radius: var(--r-sm);
+        padding: 16px 20px; margin-top: 28px; text-align: left;
+    }
+    .next-steps-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+        color: var(--co-muted); margin-bottom: 12px; display: block;
+    }
+    .next-step-item {
+        display: flex; align-items: flex-start; gap: 10px;
+        font-size: 13px; color: var(--co-body-muted);
+        margin-bottom: 8px;
+    }
+    .next-step-item:last-child { margin-bottom: 0; }
+    .next-step-item i { color: var(--co-deep-green); font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="success-wrap">
+    {% if order.status == 'PENDING' %}
+    <div class="success-icon-ring" style="background:var(--co-amber-bg);border-color:var(--co-amber-border);">
+        <i class="fa-solid fa-clock" style="color:var(--co-amber-text);"></i>
+    </div>
+    <h1 class="success-title">Menunggu Konfirmasi</h1>
+    <p class="success-sub">Pembayaran sedang diverifikasi. Halaman ini akan diperbarui otomatis.</p>
+    {% else %}
+    <div class="success-icon-ring">
+        <i class="fa-solid fa-check"></i>
+    </div>
+    <h1 class="success-title">Pembayaran Berhasil!</h1>
+    <p class="success-sub">Order kamu sudah kami terima dan akan segera diproses oleh supplier.</p>
+    {% endif %}
+    <div class="order-num-pill">{{ order.order_number }}</div>
+
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="ic-label">Order</span>
+            <span class="ic-value"><strong>{{ order.order_number }}</strong></span>
+        </div>
+        <div class="info-card-row">
+            <span class="ic-label">Total</span>
+            <span class="ic-value"><strong>Rp {{ order.total_amount|floatformat:0 }}</strong></span>
+        </div>
+        <div class="info-card-row">
+            <span class="ic-label">Tujuan</span>
+            <span class="ic-value">{{ order.shipping_address }}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="ic-label">Zona</span>
+            <span class="ic-value">{{ order.shipping_zone.name }}</span>
+        </div>
+    </div>
+
+    <div class="cta-row">
+        <a href="/orders/{{ order.order_number }}/" class="btn-primary-co">
+            <i class="fa-solid fa-file-invoice" style="font-size:12px;"></i>Lihat Detail Order
+        </a>
+        <a href="/produk/" class="btn-outline-co">
+            <i class="fa-solid fa-store" style="font-size:12px;"></i>Belanja Lagi
+        </a>
+    </div>
+
+    <div class="next-steps">
+        <span class="next-steps-label">Langkah Selanjutnya</span>
+        <div class="next-step-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Supplier akan mengkonfirmasi pesanan dalam 1x24 jam kerja.</span>
+        </div>
+        <div class="next-step-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Nomor resi akan tersedia di detail order setelah paket dikirim.</span>
+        </div>
+        <div class="next-step-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Pantau status pesanan di halaman <a href="/orders/" style="color:var(--co-primary);">Riwayat Order</a>.</span>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

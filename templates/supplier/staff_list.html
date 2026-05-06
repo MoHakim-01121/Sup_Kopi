@@ -1,0 +1,86 @@
+{% extends 'base_supplier.html' %}
+
+{% block title %}Kelola Staff – Sup Kopi{% endblock %}
+{% block page_title %}Kelola Staff{% endblock %}
+
+{% block content %}
+
+<div class="section-card">
+    <div class="section-header">
+        <h5 class="section-title">Anggota Tim</h5>
+        <a href="/supplier/staff/invite/" class="btn btn-sm btn-primary">
+            <i class="fa-solid fa-user-plus me-1" style="font-size:11px;"></i> Tambah Staff
+        </a>
+    </div>
+    <div class="section-table">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Ditambahkan</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in staff %}
+                    <tr>
+                        <td style="font-size:13px; font-weight:600; color:var(--co-ink);">
+                            {{ s.user.username }}
+                        </td>
+                        <td style="font-size:12px; color:var(--co-muted);">{{ s.user.email|default:"–" }}</td>
+                        <td>
+                            <span class="badge {% if s.is_admin %}badge-confirmed{% else %}badge-processing{% endif %}">
+                                {{ s.get_role_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if s.is_active %}
+                                <span class="badge badge-delivered">Aktif</span>
+                            {% else %}
+                                <span class="badge badge-cancelled">Nonaktif</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size:12px; color:var(--co-muted);">
+                            {{ s.created_at|date:"d M Y" }}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 align-items-center">
+                                <!-- Ganti role -->
+                                <form method="post" action="/supplier/staff/{{ s.id }}/role/" class="d-flex gap-1">
+                                    {% csrf_token %}
+                                    <select name="role" class="form-select form-select-sm" style="font-size:12px; width:auto;"
+                                            onchange="this.form.submit()">
+                                        {% for val, label in s.ROLE_CHOICES %}
+                                        <option value="{{ val }}" {% if s.role == val %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                                <!-- Toggle aktif/nonaktif -->
+                                <form method="post" action="/supplier/staff/{{ s.id }}/toggle/">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm {% if s.is_active %}btn-outline-secondary{% else %}btn-primary{% endif %}">
+                                        {% if s.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:48px 0; color:var(--co-muted); font-size:13px;">
+                            <i class="fa-solid fa-users" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:12px;"></i>
+                            Belum ada staff. <a href="/supplier/staff/invite/" style="color:var(--co-primary);">Tambah sekarang</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

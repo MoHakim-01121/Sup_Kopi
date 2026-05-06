@@ -1,0 +1,89 @@
+{% extends 'base_supplier.html' %}
+
+{% block title %}Pengiriman – Sup Kopi{% endblock %}
+{% block page_title %}Pengiriman{% endblock %}
+
+{% block content %}
+
+<!-- Filter Status -->
+<div class="section-card mb-3">
+    <div class="section-body" style="padding-top:14px; padding-bottom:14px;">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--co-muted); text-transform:uppercase; letter-spacing:1px; margin-right:4px;">Filter:</span>
+            <a href="/supplier/deliveries/"
+               class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Semua
+            </a>
+            {% for value, label in status_choices %}
+            <a href="/supplier/deliveries/?status={{ value }}"
+               class="btn btn-sm {% if status_filter == value %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Delivery Table -->
+<div class="section-card">
+    <div class="section-table">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>No. Order</th>
+                        <th>Kafe</th>
+                        <th>Kurir</th>
+                        <th>No. Resi</th>
+                        <th>Status</th>
+                        <th>Estimasi Tiba</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for delivery in deliveries %}
+                    <tr>
+                        <td style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;">
+                            {{ delivery.order.order_number }}
+                        </td>
+                        <td style="font-size:13px;">
+                            {{ delivery.order.cafe.cafe_profile.cafe_name|default:"–" }}
+                        </td>
+                        <td style="font-size:13px;">{{ delivery.courier_name }}</td>
+                        <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--co-muted);">
+                            {{ delivery.tracking_number }}
+                        </td>
+                        <td>
+                            <span class="badge
+                                {% if delivery.status == 'PREPARING' %}badge-pending
+                                {% elif delivery.status == 'SHIPPED' %}badge-processing
+                                {% elif delivery.status == 'DELIVERED' %}badge-delivered
+                                {% endif %}">
+                                {{ delivery.get_status_display }}
+                            </span>
+                        </td>
+                        <td style="font-size:12px; color:var(--co-muted);">
+                            {% if delivery.estimated_delivery_date %}
+                                {{ delivery.estimated_delivery_date|date:"d M Y" }}
+                            {% else %}–{% endif %}
+                        </td>
+                        <td>
+                            <a href="/supplier/orders/{{ delivery.order.order_number }}/"
+                               class="btn btn-sm btn-outline-secondary">Detail</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:48px 0; color:var(--co-muted); font-size:13px;">
+                            <i class="fa-solid fa-truck-fast" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:12px;"></i>
+                            Belum ada data pengiriman{% if status_filter %} dengan status ini{% endif %}.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

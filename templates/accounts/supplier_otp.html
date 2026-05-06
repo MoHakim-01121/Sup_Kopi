@@ -1,0 +1,104 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Verifikasi OTP — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    .otp-input {
+        letter-spacing: 0.4em;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        text-align: center;
+        padding: 14px;
+    }
+    #countdown { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" style="padding: 40px 0 60px;">
+    <div class="col-md-5 col-sm-10">
+
+        <div class="text-center mb-4">
+            <div style="font-size:2rem; color:var(--co-primary);">
+                <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+            <h2 style="font-size:1.4rem; font-weight:700; color:var(--co-primary); letter-spacing:-0.3px; margin:10px 0 4px;">
+                Cek Email Kamu
+            </h2>
+            <p style="font-size:0.875rem; color:var(--co-muted);">
+                Kode OTP 6 digit sudah dikirim ke<br>
+                <strong style="color:var(--co-ink);">{{ email }}</strong>
+            </p>
+        </div>
+
+        <div class="card" style="border-radius:var(--r-md);">
+            <div class="card-body" style="padding:32px;">
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert"
+                     style="border-radius:var(--r-xs); font-size:13px;">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label text-center d-block">Masukkan Kode OTP</label>
+                        <input type="text" name="code" class="form-control otp-input"
+                               maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                               placeholder="000000" autofocus required>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100" style="padding:12px;">
+                        <i class="fa-solid fa-shield-halved me-2"></i>Verifikasi & Masuk
+                    </button>
+                </form>
+
+                <div class="text-center mt-4" style="font-size:13px; color:var(--co-muted);">
+                    Kode berlaku <span id="countdown" style="color:var(--co-ink); font-weight:600;">10:00</span>
+                </div>
+
+                <div class="text-center mt-3">
+                    <form method="post" action="/accounts/supplier/resend/">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-rotate-right me-1" style="font-size:11px;"></i>
+                            Kirim Ulang Kode
+                        </button>
+                    </form>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="/accounts/supplier/login/" style="font-size:12px; color:var(--co-muted);">
+                        ← Kembali ke login
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    let secs = 600;
+    const el = document.getElementById('countdown');
+    const timer = setInterval(() => {
+        secs--;
+        const m = String(Math.floor(secs / 60)).padStart(2, '0');
+        const s = String(secs % 60).padStart(2, '0');
+        el.textContent = `${m}:${s}`;
+        if (secs <= 0) {
+            clearInterval(timer);
+            el.textContent = 'Kedaluwarsa';
+            el.style.color = 'var(--co-error)';
+        }
+    }, 1000);
+})();
+</script>
+{% endblock %}

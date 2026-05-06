@@ -1,0 +1,167 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Pembayaran {{ order.order_number }} — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    /* Payment card */
+    .payment-card {
+        background: var(--co-canvas);
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); overflow: hidden;
+        max-width: 520px; margin: 0 auto;
+    }
+    .payment-card-header {
+        padding: 20px 24px; border-bottom: 1px solid var(--co-hairline);
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .payment-card-header .order-label {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px; font-weight: 600; color: var(--co-primary);
+    }
+    .order-num-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; background: var(--co-stone);
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); padding: 4px 10px;
+        color: var(--co-ink);
+    }
+    .payment-card-body { padding: 24px; }
+
+    .price-total {
+        display: flex; justify-content: space-between; align-items: baseline;
+        margin-bottom: 28px;
+    }
+    .price-total .label { font-size: 15px; font-weight: 600; color: var(--co-primary); }
+    .price-total .value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.5rem; font-weight: 600; color: var(--co-primary);
+    }
+
+    .btn-pay {
+        display: block; width: 100%;
+        background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-sm);
+        padding: 14px; font-size: 15px; font-weight: 500;
+        cursor: pointer; transition: background 0.15s;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-pay:hover { background: var(--co-primary-hover); }
+
+    /* Trust badges */
+    .trust-strip {
+        display: flex; align-items: center; justify-content: center;
+        gap: 20px; margin-top: 16px; padding-top: 16px;
+        border-top: 1px solid var(--co-hairline);
+    }
+    .trust-badge {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 12px; color: var(--co-muted);
+    }
+    .trust-badge i { color: var(--co-deep-green); font-size: 12px; }
+
+    .btn-back-link {
+        display: block; text-align: center; margin-top: 12px;
+        font-size: 13px; color: var(--co-muted); text-decoration: none;
+        transition: color 0.15s;
+    }
+    .btn-back-link:hover { color: var(--co-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Step indicator -->
+<div class="checkout-steps">
+    <div class="step done">
+        <div class="step-num"><i class="fa-solid fa-check" style="font-size:9px;"></i></div>
+        <div class="step-label">Keranjang</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step done">
+        <div class="step-num"><i class="fa-solid fa-check" style="font-size:9px;"></i></div>
+        <div class="step-label">Checkout</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+        <div class="step-num">3</div>
+        <div class="step-label">Pembayaran</div>
+    </div>
+</div>
+
+<span class="page-eyebrow">Checkout</span>
+<h1 class="page-title">Pembayaran</h1>
+
+<div class="payment-card">
+    <div class="payment-card-header">
+        <span class="order-label">Detail Pembayaran</span>
+        <span class="order-num-badge">{{ order.order_number }}</span>
+    </div>
+    <div class="payment-card-body">
+        <div class="price-row">
+            <span class="label">Subtotal produk</span>
+            <span class="value">Rp {{ order.subtotal|floatformat:0 }}</span>
+        </div>
+        <div class="price-row">
+            <span class="label">Ongkos kirim</span>
+            <span class="value">Rp {{ order.shipping_cost|floatformat:0 }}</span>
+        </div>
+        <hr class="price-divider">
+        <div class="price-total">
+            <span class="label">Total Pembayaran</span>
+            <span class="value">Rp {{ order.total_amount|floatformat:0 }}</span>
+        </div>
+
+        <button id="pay-button" class="btn-pay">
+            <i class="fa-solid fa-lock" style="font-size:13px;"></i>
+            Bayar Sekarang
+        </button>
+
+        <div class="trust-strip">
+            <div class="trust-badge">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>SSL Secured</span>
+            </div>
+            <div class="trust-badge">
+                <i class="fa-solid fa-credit-card"></i>
+                <span>via Midtrans</span>
+            </div>
+            <div class="trust-badge">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Mudah refund</span>
+            </div>
+        </div>
+
+        <a href="/orders/{{ order.order_number }}/" class="btn-back-link">
+            <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i>Kembali ke Detail Order
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if is_production %}
+<script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ client_key }}"></script>
+{% else %}
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ client_key }}"></script>
+{% endif %}
+<script>
+    document.getElementById('pay-button').addEventListener('click', function () {
+        snap.pay('{{ payment.snap_token }}', {
+            onSuccess: function (result) {
+                window.location.href = '/payments/success/{{ order.order_number }}/';
+            },
+            onPending: function (result) {
+                window.location.href = '/orders/{{ order.order_number }}/';
+            },
+            onError: function (result) {
+                if (window.showToast) {
+                    window.showToast('Pembayaran gagal. Silakan coba lagi.', 'error');
+                }
+            },
+            onClose: function () {}
+        });
+    });
+</script>
+{% endblock %}

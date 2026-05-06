@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sup Kopi{% endblock %}</title>
+
+    <!-- Space Grotesk (display) + Inter (body) + JetBrains Mono (mono labels) -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* ── Cohere Design System Tokens ── */
+        :root {
+            /* Brand */
+            --co-black:       #000000;
+            --co-primary:     #17171c;
+            --co-ink:         #212121;
+            --co-deep-green:  #003c33;
+            --co-dark-navy:   #071829;
+
+            /* Surfaces */
+            --co-canvas:      #ffffff;
+            --co-stone:       #eeece7;
+            --co-pale-green:  #edfce9;
+            --co-pale-blue:   #f1f5ff;
+
+            /* Borders — satu token untuk konsistensi */
+            --co-hairline:    #d9d9dd;
+            --co-border:      #d9d9dd;
+
+            /* Text */
+            --co-muted:       #93939f;
+            --co-slate:       #75758a;
+            --co-body-muted:  #616161;
+
+            /* Accents */
+            --co-blue:        #1863dc;
+            --co-focus:       #4c6ee6;
+            --co-coral:       #ff7759;
+            --co-coral-soft:  #ffad9b;
+            --co-form-focus:  #9b60aa;
+            --co-error:       #b30000;
+
+            /* Interactive states */
+            --co-primary-hover: #2d2d35;
+
+            /* Amber / warning (PENDING state) */
+            --co-amber-bg:     #fff8e6;
+            --co-amber-border: #fde68a;
+            --co-amber-text:   #92600a;
+            --co-amber-subtle: #fef3c7;
+            --co-amber-dim:    #a16207;
+
+            /* Radius */
+            --r-xs:  4px;
+            --r-sm:  8px;
+            --r-md:  16px;
+            --r-lg:  22px;
+            --r-xl:  30px;
+            --r-pill:32px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Arial', system-ui, sans-serif;
+            background: var(--co-canvas);
+            color: var(--co-ink);
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Display headings */
+        h1, h2, h3, .display-font {
+            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        /* Mono labels */
+        .mono-label, code, .badge-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; letter-spacing: 0.02em;
+        }
+
+        /* ── BUTTONS ── */
+        .btn { font-size: 14px; font-weight: 500; transition: all 0.16s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+        /* Primary — near-black pill */
+        .btn-primary, .btn-dark, .btn-coffee {
+            background: var(--co-primary) !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: var(--r-pill) !important;
+            padding: 12px 24px;
+            font-weight: 500;
+        }
+        .btn-primary:hover, .btn-dark:hover, .btn-coffee:hover {
+            background: var(--co-primary-hover) !important;
+            color: #fff !important;
+        }
+
+        /* Outline pill */
+        .btn-outline-primary, .btn-outline-dark {
+            background: transparent !important;
+            color: var(--co-primary) !important;
+            border: 1.5px solid var(--co-primary) !important;
+            border-radius: var(--r-pill) !important;
+            padding: 10px 22px;
+        }
+        .btn-outline-primary:hover, .btn-outline-dark:hover {
+            background: var(--co-primary) !important;
+            color: #fff !important;
+        }
+
+        /* Secondary — text link style */
+        .btn-secondary, .btn-outline-secondary {
+            background: transparent !important;
+            color: var(--co-ink) !important;
+            border: 1.5px solid var(--co-hairline) !important;
+            border-radius: var(--r-xs) !important;
+            padding: 10px 22px;
+        }
+        .btn-secondary:hover, .btn-outline-secondary:hover {
+            border-color: var(--co-primary) !important;
+            color: var(--co-primary) !important;
+            background: transparent !important;
+        }
+
+        /* Amber/gold compat */
+        .btn-amber, .btn-gold {
+            background: var(--co-coral) !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: var(--r-pill) !important;
+            padding: 12px 24px;
+        }
+        .btn-amber:hover, .btn-gold:hover { background: #e05c40 !important; }
+
+        /* ── CARDS ── */
+        .card {
+            border: 1px solid var(--co-border);
+            border-radius: var(--r-sm);
+            background: var(--co-canvas);
+            box-shadow: none;
+        }
+        .card-body { padding: 24px; }
+
+        /* ── FORMS ── */
+        .form-control, .form-select {
+            border-radius: var(--r-xs);
+            border: 1px solid var(--co-hairline);
+            font-size: 15px; padding: 10px 14px;
+            background: var(--co-canvas);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--co-form-focus);
+            box-shadow: 0 0 0 3px rgba(155,96,170,0.15);
+            outline: none;
+        }
+        .form-label {
+            font-weight: 500; font-size: 14px;
+            color: var(--co-ink); margin-bottom: 6px;
+        }
+        .form-text { font-size: 12px; color: var(--co-muted); }
+
+        /* ── TABLES ── */
+        .table { font-size: 14px; margin-bottom: 0; }
+        .table th {
+            font-weight: 500; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            color: var(--co-muted); background: var(--co-canvas);
+            border-bottom: 1px solid var(--co-hairline);
+            padding: 12px 16px;
+        }
+        .table td {
+            vertical-align: middle;
+            border-color: var(--co-border);
+            padding: 13px 16px; color: var(--co-ink);
+        }
+        .table-hover tbody tr:hover { background: var(--co-stone); }
+
+        /* ── BADGES ── */
+        .badge {
+            font-weight: 500; font-size: 11px;
+            padding: 4px 10px; border-radius: var(--r-xl);
+            letter-spacing: 0.2px;
+        }
+
+        /* Status badges — aligned with store .status-* semantic colors */
+        .badge-pending    { background: var(--co-amber-bg);    color: var(--co-amber-text); border: 1px solid var(--co-amber-border); }
+        .badge-confirmed  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .badge-processing { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .badge-shipped    { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
+        .badge-delivered  { background: #ecfdf5; color: var(--co-deep-green); border: 1px solid #a7f3d0; }
+        .badge-cancelled  { background: #fff1f0; color: var(--co-error); border: 1px solid #fecaca; }
+
+        /* ── ALERTS ── */
+        .alert { border: 1px solid var(--co-hairline); border-radius: var(--r-sm); font-size: 14px; }
+
+        /* ── MISC ── */
+        .text-muted { color: var(--co-muted) !important; }
+        .fw-semibold { font-weight: 600; }
+        a { text-decoration: none; color: inherit; }
+        a:hover { color: var(--co-primary); }
+
+        /* ── METRIC CARDS (dashboard) ── */
+        .metric-card {
+            border-radius: var(--r-sm);
+            padding: 22px 24px;
+            color: #fff; position: relative; overflow: hidden;
+            border: none;
+        }
+        .metric-card .metric-label {
+            font-size: 11px; opacity: 0.75;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .metric-card .metric-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; margin-top: 8px; font-family: 'Space Grotesk', sans-serif; }
+        .metric-card .metric-sub   { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+        .metric-card .metric-icon  { font-size: 3rem; opacity: 0.1; position: absolute; right: 18px; bottom: 12px; }
+
+        .metric-coffee { background: var(--co-deep-green); }
+        .metric-amber  { background: #b45309; }
+        .metric-green  { background: #065f46; }
+        .metric-blue   { background: var(--co-dark-navy); }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

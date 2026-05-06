@@ -1,0 +1,286 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Checkout — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    /* Section card — numbered circle unique to checkout */
+    .co-card-header .card-num {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: var(--co-primary); color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* Textarea */
+    .form-textarea {
+        width: 100%; border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); padding: 12px 14px;
+        font-size: 14px; line-height: 1.55; color: var(--co-ink);
+        background: var(--co-canvas); resize: vertical; min-height: 80px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+    }
+    .form-textarea:focus {
+        border-color: var(--co-form-focus);
+        box-shadow: 0 0 0 3px rgba(155,96,170,0.12); outline: none;
+    }
+
+    /* Shipping zone options */
+    .zone-option { margin-bottom: 8px; }
+    .zone-option:last-child { margin-bottom: 0; }
+    .zone-option input[type="radio"] { display: none; }
+    .zone-label {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding: 14px 16px;
+        border: 1.5px solid var(--co-hairline);
+        border-radius: var(--r-xs); cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+        gap: 12px;
+    }
+    .zone-label:hover { border-color: var(--co-primary); background: var(--co-stone); }
+    .zone-option input[type="radio"]:checked + .zone-label {
+        border-color: var(--co-primary);
+        background: var(--co-pale-blue);
+    }
+    .zone-label .zone-info { flex: 1; }
+    .zone-label .zone-name { font-size: 14px; font-weight: 600; color: var(--co-primary); margin-bottom: 2px; }
+    .zone-label .zone-desc { font-size: 12px; color: var(--co-muted); display: flex; align-items: center; gap: 8px; }
+    .zone-label .zone-cost {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px; font-weight: 600; color: var(--co-primary);
+        white-space: nowrap;
+    }
+    .zone-eta {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; background: var(--co-stone);
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xl); padding: 2px 8px;
+        color: var(--co-muted); white-space: nowrap;
+    }
+
+    /* Order summary sticky */
+    .summary-header {
+        padding: 14px 20px; border-bottom: 1px solid var(--co-hairline);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px; font-weight: 600; color: var(--co-primary);
+    }
+    .summary-item {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding: 8px 0; border-bottom: 1px solid var(--co-hairline); gap: 12px;
+    }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-item .item-name { font-size: 13px; color: var(--co-ink); flex: 1; }
+    .summary-item .item-qty {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; color: var(--co-muted); white-space: nowrap;
+    }
+    .summary-item .item-price { font-size: 13px; font-weight: 500; color: var(--co-primary); white-space: nowrap; }
+    .summary-divider { border: none; border-top: 1px solid var(--co-hairline); margin: 12px 0; }
+    .summary-row {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 13px; margin-bottom: 8px;
+    }
+    .summary-row .label { color: var(--co-muted); }
+    .summary-row .value { font-weight: 500; color: var(--co-ink); }
+    .summary-total {
+        display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;
+    }
+    .summary-total .label { font-size: 14px; font-weight: 600; color: var(--co-primary); }
+    .summary-total .value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.25rem; font-weight: 600; color: var(--co-primary);
+    }
+    .btn-confirm {
+        display: block; width: 100%;
+        background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-sm);
+        padding: 13px; font-size: 14px; font-weight: 500;
+        cursor: pointer; transition: background 0.15s;
+    }
+    .btn-confirm:hover:not(:disabled) { background: var(--co-primary-hover); }
+    .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-back {
+        display: block; text-align: center; margin-top: 10px;
+        font-size: 13px; color: var(--co-muted); text-decoration: none;
+        transition: color 0.15s;
+    }
+    .btn-back:hover { color: var(--co-primary); }
+    .field-hint {
+        font-size: 12px; color: var(--co-muted); margin-top: 6px;
+        display: flex; align-items: center; gap: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Step indicator -->
+<div class="checkout-steps">
+    <div class="step done">
+        <div class="step-num"><i class="fa-solid fa-check" style="font-size:9px;"></i></div>
+        <div class="step-label">Keranjang</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+        <div class="step-num">2</div>
+        <div class="step-label">Checkout</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step pending">
+        <div class="step-num">3</div>
+        <div class="step-label">Pembayaran</div>
+    </div>
+</div>
+
+<span class="page-eyebrow">Checkout</span>
+<h1 class="page-title">Detail Pengiriman</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row g-4">
+
+        <!-- Left: Alamat + Zona + Catatan -->
+        <div class="col-lg-7">
+
+            <!-- Alamat Pengiriman -->
+            <div class="co-card">
+                <div class="co-card-header">
+                    <div class="card-num">1</div>
+                    <div class="card-title">Alamat Pengiriman</div>
+                </div>
+                <div class="co-card-body">
+                    <label style="font-size:13px; color:var(--co-muted); margin-bottom:8px; display:block;"
+                        for="shipping_address">Alamat lengkap tujuan pengiriman</label>
+                    <textarea name="shipping_address" id="shipping_address"
+                        class="form-textarea" rows="3"
+                        required>{{ profile.address }}, {{ profile.city }}, {{ profile.province }} {{ profile.postal_code }}</textarea>
+                    <p class="field-hint">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Pastikan alamat sesuai dengan lokasi kafe kamu.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Zona Pengiriman -->
+            <div class="co-card">
+                <div class="co-card-header">
+                    <div class="card-num">2</div>
+                    <div class="card-title">Pilih Zona Pengiriman</div>
+                </div>
+                <div class="co-card-body">
+                    {% for zone in zones %}
+                    <div class="zone-option">
+                        <input type="radio" name="shipping_zone"
+                            id="zone_{{ zone.id }}"
+                            value="{{ zone.id }}"
+                            data-cost="{{ zone.shipping_cost }}"
+                            required>
+                        <label class="zone-label" for="zone_{{ zone.id }}">
+                            <div class="zone-info">
+                                <div class="zone-name">{{ zone.name }}</div>
+                                <div class="zone-desc">
+                                    <span>{{ zone.area_description }}</span>
+                                    <span class="zone-eta">{{ zone.delivery_estimate_display }}</span>
+                                </div>
+                            </div>
+                            <div class="zone-cost">Rp {{ zone.shipping_cost|floatformat:0 }}</div>
+                        </label>
+                    </div>
+                    {% empty %}
+                    <p style="font-size:14px; color:var(--co-muted);">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        Belum ada zona pengiriman tersedia.
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Catatan -->
+            <div class="co-card">
+                <div class="co-card-header">
+                    <div class="card-num">3</div>
+                    <div class="card-title">Catatan untuk Supplier</div>
+                </div>
+                <div class="co-card-body">
+                    <textarea name="notes" id="notes" class="form-textarea" style="min-height:68px;"
+                        placeholder="Instruksi khusus, waktu pengiriman, atau info tambahan... (opsional)"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right: Order summary -->
+        <div class="col-lg-5">
+            <div class="summary-card">
+                <div class="summary-header">Ringkasan Pesanan</div>
+                <div class="summary-body">
+                    {% for item in cart.items.all %}
+                    <div class="summary-item">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-qty">×{{ item.quantity }} {{ item.product.unit }}</div>
+                        <div class="item-price">Rp {{ item.subtotal|floatformat:0 }}</div>
+                    </div>
+                    {% endfor %}
+
+                    <hr class="summary-divider">
+
+                    <div class="summary-row">
+                        <span class="label">Subtotal produk</span>
+                        <span class="value">Rp {{ cart.subtotal|floatformat:0 }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Ongkos kirim</span>
+                        <span class="value" id="shippingDisplay" style="color:var(--co-muted);">Pilih zona →</span>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <div class="summary-total">
+                        <span class="label">Total</span>
+                        <span class="value" id="totalDisplay">—</span>
+                    </div>
+
+                    <button type="submit" class="btn-confirm" id="confirmBtn"
+                        data-subtotal="{{ cart.subtotal }}" disabled>
+                        Buat Order &amp; Bayar
+                        <i class="fa-solid fa-lock ms-2" style="font-size:11px;"></i>
+                    </button>
+                    <a href="/cart/" class="btn-back">
+                        <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i>Kembali ke Keranjang
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var btn      = document.getElementById('confirmBtn');
+    var subtotal = parseFloat(btn.dataset.subtotal) || 0;
+    var radios   = document.querySelectorAll('input[name="shipping_zone"]');
+    var shipping = document.getElementById('shippingDisplay');
+    var total    = document.getElementById('totalDisplay');
+
+    function fmt(n) {
+        return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    }
+
+    radios.forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            var cost = parseFloat(this.dataset.cost) || 0;
+            shipping.textContent = fmt(cost);
+            shipping.style.color = '';
+            total.textContent    = fmt(subtotal + cost);
+            btn.disabled = false;
+        });
+    });
+})();
+</script>
+{% endblock %}

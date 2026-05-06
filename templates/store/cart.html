@@ -1,0 +1,281 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Keranjang — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    /* Cart item row */
+    .cart-item {
+        display: grid;
+        grid-template-columns: 64px 1fr auto auto auto;
+        align-items: center; gap: 16px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--co-hairline);
+        background: var(--co-canvas);
+        transition: background 0.12s;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item:hover { background: var(--co-stone); }
+    .cart-item-img {
+        width: 64px; height: 64px; border-radius: var(--r-xs);
+        object-fit: cover; background: var(--co-stone);
+        border: 1px solid var(--co-hairline);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; flex-shrink: 0;
+    }
+    .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+    .cart-item-img .placeholder-icon { font-size: 1.4rem; color: var(--co-muted); opacity: 0.5; }
+    .cart-item-info { min-width: 0; }
+    .cart-item-name {
+        font-size: 14px; font-weight: 600; color: var(--co-primary);
+        margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cart-item-unit {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; color: var(--co-muted); letter-spacing: 0.3px;
+    }
+
+    /* Qty update form */
+    .cart-qty-form { display: flex; align-items: center; gap: 6px; }
+    .cart-qty-input {
+        width: 56px; height: 34px; border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); text-align: center;
+        font-size: 14px; font-weight: 600; color: var(--co-primary);
+        background: var(--co-canvas); outline: none;
+        transition: border-color 0.15s;
+    }
+    .cart-qty-input:focus { border-color: var(--co-form-focus); }
+    .btn-qty-update {
+        height: 34px; padding: 0 12px;
+        font-size: 12px; font-weight: 500; color: var(--co-muted);
+        background: var(--co-stone); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); cursor: pointer; transition: all 0.15s;
+    }
+    .btn-qty-update:hover { border-color: var(--co-primary); color: var(--co-primary); }
+
+    .cart-item-subtotal {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px; font-weight: 600; color: var(--co-primary);
+        text-align: right; white-space: nowrap; min-width: 100px;
+    }
+    .btn-remove {
+        background: none; border: none; cursor: pointer;
+        color: var(--co-muted); font-size: 13px; padding: 4px;
+        border-radius: var(--r-xs); transition: color 0.15s, background 0.15s;
+    }
+    .btn-remove:hover { color: var(--co-error); background: #fff1f0; }
+
+    /* Cart table wrapper */
+    .cart-table {
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); overflow: hidden;
+    }
+    .cart-table-header {
+        display: grid;
+        grid-template-columns: 64px 1fr auto auto auto;
+        gap: 16px; padding: 10px 20px;
+        background: var(--co-stone);
+        border-bottom: 1px solid var(--co-hairline);
+    }
+    .cart-table-header span {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--co-muted);
+    }
+    .col-qty   { text-align: center; min-width: 130px; }
+    .col-sub   { text-align: right; min-width: 100px; }
+    .col-del   { min-width: 28px; }
+
+    /* Summary card */
+    .summary-header {
+        padding: 16px 20px; border-bottom: 1px solid var(--co-hairline);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px; font-weight: 600; color: var(--co-primary);
+    }
+    .summary-row {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 14px; margin-bottom: 10px;
+    }
+    .summary-row .label { color: var(--co-muted); }
+    .summary-row .value { font-weight: 500; color: var(--co-ink); }
+    .summary-total {
+        display: flex; justify-content: space-between; align-items: baseline;
+        margin-bottom: 16px;
+    }
+    .summary-total .label { font-size: 14px; font-weight: 600; color: var(--co-primary); }
+    .summary-total .value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.3rem; font-weight: 600; color: var(--co-primary);
+    }
+    .btn-checkout {
+        display: block; width: 100%;
+        background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-sm);
+        padding: 13px; font-size: 14px; font-weight: 500;
+        text-align: center; text-decoration: none;
+        transition: background 0.15s;
+    }
+    .btn-checkout:hover { background: var(--co-primary-hover); color: #fff; }
+    .btn-continue-shop {
+        display: block; text-align: center; margin-top: 10px;
+        font-size: 13px; color: var(--co-muted); text-decoration: none;
+        transition: color 0.15s;
+    }
+    .btn-continue-shop:hover { color: var(--co-primary); }
+
+    /* Empty state */
+    .cart-empty {
+        text-align: center; padding: 80px 24px;
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); background: var(--co-canvas);
+    }
+    .cart-empty i { font-size: 3rem; color: var(--co-muted); opacity: 0.3; display: block; margin-bottom: 16px; }
+    .cart-empty h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--co-primary); margin-bottom: 8px; }
+    .cart-empty p { color: var(--co-muted); font-size: 14px; margin-bottom: 24px; }
+    .btn-start-shop {
+        display: inline-block;
+        background: var(--co-primary); color: #fff;
+        border-radius: var(--r-sm); padding: 11px 28px;
+        font-size: 14px; font-weight: 500; text-decoration: none;
+        transition: background 0.15s;
+    }
+    .btn-start-shop:hover { background: var(--co-primary-hover); color: #fff; }
+
+    @media (max-width: 640px) {
+        .cart-table-header { display: none; }
+        .cart-item { grid-template-columns: 48px 1fr auto; grid-template-rows: auto auto; }
+        .cart-item-subtotal { grid-column: 2; grid-row: 2; font-size: 14px; }
+        .btn-remove { grid-column: 3; grid-row: 1; }
+        .cart-qty-form { grid-column: 2 / span 2; grid-row: 2; justify-content: flex-start; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Step indicator -->
+<div class="checkout-steps">
+    <div class="step active">
+        <div class="step-num">1</div>
+        <div class="step-label">Keranjang</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step pending">
+        <div class="step-num">2</div>
+        <div class="step-label">Checkout</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step pending">
+        <div class="step-num">3</div>
+        <div class="step-label">Pembayaran</div>
+    </div>
+</div>
+
+<span class="page-eyebrow">Keranjang Belanja</span>
+<h1 class="page-title">
+    {% if cart.total_items > 0 %}{{ cart.total_items }} produk dipilih{% else %}Keranjang kosong{% endif %}
+</h1>
+
+{% if cart.total_items == 0 %}
+<div class="cart-empty">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <h4>Keranjang kamu masih kosong</h4>
+    <p>Mulai pilih produk kopi untuk kafe kamu.</p>
+    <a href="/produk/" class="btn-start-shop">
+        <i class="fa-solid fa-store me-2"></i>Lihat Produk
+    </a>
+</div>
+
+{% else %}
+<div class="row g-4">
+    <!-- Items -->
+    <div class="col-lg-8">
+        <div class="cart-table">
+            <div class="cart-table-header">
+                <span></span>
+                <span>Produk</span>
+                <span class="col-qty">Jumlah</span>
+                <span class="col-sub">Subtotal</span>
+                <span class="col-del"></span>
+            </div>
+
+            {% for item in cart.items.all %}
+            <div class="cart-item">
+                <!-- Image -->
+                <div class="cart-item-img">
+                    {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                    {% else %}
+                        <span class="placeholder-icon"><i class="fa-solid fa-mug-hot"></i></span>
+                    {% endif %}
+                </div>
+
+                <!-- Info -->
+                <div class="cart-item-info">
+                    <div class="cart-item-name">{{ item.product.name }}</div>
+                    <div class="cart-item-unit">Rp {{ item.product.price|floatformat:0 }} / {{ item.product.unit }}</div>
+                </div>
+
+                <!-- Qty update -->
+                <form method="post" action="/cart/update/{{ item.id }}/" class="cart-qty-form">
+                    {% csrf_token %}
+                    <input type="number" name="quantity" value="{{ item.quantity }}"
+                           min="{{ item.product.minimum_order }}" max="{{ item.product.stock }}"
+                           class="cart-qty-input" aria-label="Jumlah {{ item.product.name }}">
+                    <button type="submit" class="btn-qty-update">Ubah</button>
+                </form>
+
+                <!-- Subtotal -->
+                <div class="cart-item-subtotal">Rp {{ item.subtotal|floatformat:0 }}</div>
+
+                <!-- Remove -->
+                <form method="post" action="/cart/remove/{{ item.id }}/">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-remove" aria-label="Hapus {{ item.product.name }}" title="Hapus">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-3">
+            <a href="/produk/" style="font-size:13px; color:var(--co-muted); text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:color 0.15s;">
+                <i class="fa-solid fa-arrow-left" style="font-size:11px;"></i> Lanjut belanja
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="col-lg-4">
+        <div class="summary-card">
+            <div class="summary-header">Ringkasan Order</div>
+            <div class="summary-body">
+                <div class="summary-row">
+                    <span class="label">Total item</span>
+                    <span class="value">{{ cart.total_items }} {{ cart.total_items|pluralize:"produk,produk" }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Subtotal produk</span>
+                    <span class="value">Rp {{ cart.subtotal|floatformat:0 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Ongkos kirim</span>
+                    <span class="value" style="color:var(--co-muted);">Dihitung di checkout</span>
+                </div>
+                <hr class="summary-divider">
+                <div class="summary-total">
+                    <span class="label">Subtotal</span>
+                    <span class="value">Rp {{ cart.subtotal|floatformat:0 }}</span>
+                </div>
+                <a href="/cart/checkout/" class="btn-checkout">
+                    Lanjut ke Checkout <i class="fa-solid fa-arrow-right ms-2" style="font-size:12px;"></i>
+                </a>
+                <a href="/produk/" class="btn-continue-shop">atau lanjut belanja</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

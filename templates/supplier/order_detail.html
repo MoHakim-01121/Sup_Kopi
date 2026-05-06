@@ -1,0 +1,163 @@
+{% extends 'base_supplier.html' %}
+
+{% block title %}Order {{ order.order_number }} – Supplier{% endblock %}
+{% block page_title %}Order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+
+<!-- Header bar: status + back button -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <span class="badge fs-6
+        {% if order.status == 'PENDING' %}badge-pending
+        {% elif order.status == 'CONFIRMED' %}badge-confirmed
+        {% elif order.status == 'PROCESSING' %}badge-processing
+        {% elif order.status == 'SHIPPED' %}badge-shipped
+        {% elif order.status == 'DELIVERED' %}badge-delivered
+        {% elif order.status == 'CANCELLED' %}badge-cancelled
+        {% endif %}"
+        style="font-size:12px !important; padding:6px 14px;">
+        {{ order.get_status_display }}
+    </span>
+    <a href="/supplier/orders/" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i> Kembali
+    </a>
+</div>
+
+<div class="row g-4">
+
+    <!-- Left column: items + delivery -->
+    <div class="col-lg-8">
+
+        <!-- Produk Dipesan -->
+        <div class="section-card mb-3">
+            <div class="section-header">
+                <h5 class="section-title">Produk Dipesan</h5>
+            </div>
+            <div class="section-body">
+                {% for item in order.items.all %}
+                <div class="d-flex justify-content-between align-items-start py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div>
+                        <div style="font-size:13px; font-weight:600; color:var(--co-ink);">{{ item.product_name }}</div>
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--co-muted);">
+                            {{ item.quantity }} {{ item.product_unit }}
+                        </div>
+                    </div>
+                    <span style="font-size:13px; font-weight:600; white-space:nowrap;">Rp {{ item.subtotal|floatformat:0 }}</span>
+                </div>
+                {% endfor %}
+                <div style="border-top:1px solid var(--co-hairline); margin-top:12px; padding-top:12px;">
+                    <div class="d-flex justify-content-between mb-1" style="font-size:13px;">
+                        <span style="color:var(--co-muted);">Subtotal</span>
+                        <span>Rp {{ order.subtotal|floatformat:0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" style="font-size:13px;">
+                        <span style="color:var(--co-muted);">Ongkir</span>
+                        <span>Rp {{ order.shipping_cost|floatformat:0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size:14px; font-weight:700;">
+                        <span>Total</span>
+                        <span>Rp {{ order.total_amount|floatformat:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pengiriman -->
+        {% if delivery %}
+        <div class="section-card">
+            <div class="section-header">
+                <h5 class="section-title">Informasi Pengiriman</h5>
+            </div>
+            <div class="section-body">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">Kurir</div>
+                        <div style="font-size:13px; font-weight:600;">{{ delivery.courier_name }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">No. Resi</div>
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;">{{ delivery.tracking_number }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">Status</div>
+                        <div style="font-size:13px;">{{ delivery.get_status_display }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">Estimasi Tiba</div>
+                        <div style="font-size:13px;">{{ delivery.estimated_delivery_date|date:"d M Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Right column: cafe info + actions -->
+    <div class="col-lg-4">
+
+        <!-- Info Kafe -->
+        <div class="section-card mb-3">
+            <div class="section-header">
+                <h5 class="section-title">Info Kafe</h5>
+            </div>
+            <div class="section-body">
+                <div style="font-size:14px; font-weight:600; color:var(--co-primary); margin-bottom:4px;">
+                    {{ order.cafe.cafe_profile.cafe_name|default:"–" }}
+                </div>
+                <div style="font-size:12px; color:var(--co-muted);">{{ order.cafe.email }}</div>
+            </div>
+        </div>
+
+        <!-- Alamat -->
+        <div class="section-card mb-3">
+            <div class="section-header">
+                <h5 class="section-title">Alamat Pengiriman</h5>
+            </div>
+            <div class="section-body">
+                <div style="font-size:13px; font-weight:600; color:var(--co-ink); margin-bottom:4px;">
+                    {{ order.shipping_zone.name }}
+                </div>
+                <div style="font-size:12px; color:var(--co-muted); line-height:1.5;">{{ order.shipping_address }}</div>
+            </div>
+        </div>
+
+        <!-- Pembayaran -->
+        {% if payment %}
+        <div class="section-card mb-3">
+            <div class="section-header">
+                <h5 class="section-title">Pembayaran</h5>
+            </div>
+            <div class="section-body">
+                <span class="badge {% if payment.status == 'PAID' %}badge-delivered{% else %}badge-pending{% endif %}">
+                    {{ payment.status }}
+                </span>
+                {% if payment.payment_type %}
+                <div style="font-size:12px; color:var(--co-muted); margin-top:8px;">Via: {{ payment.payment_type }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="d-flex flex-column gap-2">
+            {% if order.status == 'CONFIRMED' and not delivery %}
+            <a href="/delivery/create/{{ order.order_number }}/" class="btn btn-primary">
+                <i class="fa-solid fa-truck me-1"></i> Input Resi Pengiriman
+            </a>
+            {% endif %}
+            {% if delivery and delivery.status == 'SHIPPED' %}
+            <form method="post" action="/delivery/update/{{ order.order_number }}/">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="DELIVERED">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-circle-check me-1"></i> Tandai Terkirim
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

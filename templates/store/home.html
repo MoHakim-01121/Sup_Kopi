@@ -1,0 +1,609 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Sup Kopi — Platform Supplier Kopi B2B{% endblock %}
+
+{# full-bleed landing page — overrides content_outer and moves CSS to head #}
+{% block page_css %}
+<style>
+    .store-main { padding: 0; min-height: calc(100vh - 64px); }
+
+    /* ── SHARED SECTION UTILITY ── */
+    .section-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    .section-eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; letter-spacing: 1.5px;
+        text-transform: uppercase; color: var(--co-muted);
+        display: block; margin-bottom: 10px;
+    }
+    .section-heading {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        font-weight: 400; letter-spacing: -0.03em;
+        color: var(--co-primary); line-height: 1.15; margin: 0;
+    }
+
+    /* ── HERO ── */
+    .hero-wrap {
+        padding: 72px 24px 64px;
+        background: var(--co-canvas);
+        text-align: center;
+        border-bottom: 1px solid var(--co-hairline);
+    }
+    .hero-eyebrow {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;
+        color: var(--co-muted); margin-bottom: 24px;
+        padding: 5px 14px; border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xl); background: var(--co-stone);
+    }
+    .hero-h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(2.2rem, 5vw, 3.6rem);
+        font-weight: 400; letter-spacing: -0.04em;
+        line-height: 1.06; color: var(--co-primary);
+        max-width: 680px; margin: 0 auto 20px;
+    }
+    .hero-h1 em { font-style: normal; color: var(--co-deep-green); }
+    .hero-sub {
+        font-size: 17px; color: var(--co-body-muted);
+        line-height: 1.6; max-width: 480px; margin: 0 auto 28px;
+    }
+    /* Hero search */
+    .hero-search { width: 100%; max-width: 460px; margin: 0 auto 28px; }
+    .hero-search-inner {
+        display: flex; align-items: center;
+        border: 1.5px solid var(--co-hairline);
+        border-radius: var(--r-xs); background: var(--co-canvas); overflow: hidden;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .hero-search-inner:focus-within {
+        border-color: var(--co-primary);
+        box-shadow: 0 0 0 3px rgba(23,23,28,0.07);
+    }
+    .hero-search-icon { padding: 0 14px; color: var(--co-muted); font-size: 13px; flex-shrink: 0; }
+    .hero-search-input {
+        flex: 1; border: none; background: transparent;
+        padding: 12px 0; font-size: 14px; color: var(--co-ink); outline: none;
+    }
+    .hero-search-input::placeholder { color: var(--co-muted); }
+    .hero-search-btn {
+        background: var(--co-primary); color: #fff;
+        border: none; padding: 12px 22px;
+        font-size: 13px; font-weight: 500; cursor: pointer; flex-shrink: 0;
+        transition: background 0.15s;
+    }
+    .hero-search-btn:hover { background: var(--co-primary-hover); }
+    .hero-actions { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .btn-hero-primary {
+        background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-xs);
+        padding: 13px 28px; font-weight: 500; font-size: 15px;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: background 0.15s;
+    }
+    .btn-hero-primary:hover { background: var(--co-primary-hover); color: #fff; }
+    .btn-hero-secondary {
+        background: transparent; color: var(--co-ink);
+        border: 1.5px solid var(--co-hairline); border-radius: var(--r-xs);
+        padding: 12px 24px; font-weight: 500; font-size: 15px;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-hero-secondary:hover { border-color: var(--co-primary); color: var(--co-primary); }
+
+    /* ── CATEGORY GRID ── */
+    .cat-section { padding: 52px 0; background: var(--co-stone); }
+    .cat-topbar {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        flex-wrap: wrap; gap: 10px; margin-bottom: 24px;
+    }
+    .cat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+    }
+    .cat-card {
+        background: var(--co-canvas);
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm);
+        padding: 20px 14px; text-align: center;
+        text-decoration: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .cat-card:hover {
+        border-color: var(--co-primary);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .cat-icon {
+        width: 44px; height: 44px; border-radius: var(--r-sm);
+        background: var(--co-stone); border: 1px solid var(--co-hairline);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; color: var(--co-primary);
+    }
+    .cat-name {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 13px; font-weight: 600; color: var(--co-primary);
+        line-height: 1.3;
+    }
+    .cat-count {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; color: var(--co-muted);
+    }
+
+    /* ── PRODUCT GRID ── */
+    .products-section { padding: 64px 0; background: var(--co-canvas); }
+    .section-topbar {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
+    }
+    .link-see-all {
+        font-size: 13px; font-weight: 500; color: var(--co-primary);
+        text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        padding: 6px 14px; transition: border-color 0.15s, background 0.15s;
+        white-space: nowrap;
+    }
+    .link-see-all:hover { border-color: var(--co-primary); background: var(--co-stone); }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+    }
+    .product-card {
+        background: var(--co-canvas);
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); overflow: hidden;
+        display: flex; flex-direction: column;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .product-card:hover {
+        border-color: var(--co-primary);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    }
+    .product-img { height: 160px; object-fit: cover; width: 100%; display: block; }
+    .product-img-ph {
+        height: 160px; background: var(--co-stone);
+        border-bottom: 1px solid var(--co-hairline);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2rem; color: var(--co-muted); opacity: 0.4;
+    }
+    .product-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; }
+    .product-cat-mono {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--co-muted); margin-bottom: 5px;
+    }
+    .product-name {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px; font-weight: 600; color: var(--co-primary);
+        margin-bottom: 10px; line-height: 1.3;
+    }
+    .product-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
+    .badge-ok {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px;
+        padding: 3px 8px; border-radius: var(--r-xl);
+        background: #edfce9; color: var(--co-deep-green); border: 1px solid #a7f3c0;
+    }
+    .badge-out {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px;
+        padding: 3px 8px; border-radius: var(--r-xl);
+        background: #fff1f0; color: var(--co-error); border: 1px solid #fecaca;
+    }
+    .badge-moq {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px;
+        padding: 3px 8px; border-radius: var(--r-xl);
+        background: var(--co-stone); color: var(--co-muted); border: 1px solid var(--co-hairline);
+    }
+    .product-footer {
+        margin-top: auto; padding-top: 12px;
+        border-top: 1px solid var(--co-hairline);
+    }
+    .product-price {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px; font-weight: 600; color: var(--co-primary); margin-bottom: 10px;
+    }
+    .product-price .unit {
+        font-size: 11px; font-weight: 400; color: var(--co-muted); font-family: 'Inter', sans-serif;
+    }
+    .btn-add-sm {
+        display: block; width: 100%;
+        background: var(--co-primary); color: #fff;
+        border: none; border-radius: var(--r-xs);
+        padding: 9px; font-size: 13px; font-weight: 500;
+        cursor: pointer; transition: background 0.15s; text-align: center;
+    }
+    .btn-add-sm:hover { background: var(--co-primary-hover); color: #fff; }
+    .btn-add-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-detail-sm {
+        display: block; width: 100%; text-align: center;
+        background: transparent; color: var(--co-primary);
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        padding: 9px; font-size: 13px; font-weight: 500;
+        text-decoration: none; transition: border-color 0.15s, background 0.15s;
+    }
+    .btn-detail-sm:hover { border-color: var(--co-primary); background: var(--co-stone); color: var(--co-primary); }
+
+    /* ── TRUST STRIP ── */
+    .trust-section {
+        padding: 0;
+        background: var(--co-canvas);
+        border-top: 1px solid var(--co-hairline);
+        border-bottom: 1px solid var(--co-hairline);
+    }
+    .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .trust-item {
+        padding: 28px 24px; text-align: center;
+        border-right: 1px solid var(--co-hairline);
+    }
+    .trust-item:last-child { border-right: none; }
+    .trust-num {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2rem; font-weight: 400; letter-spacing: -0.04em;
+        color: var(--co-primary); display: block;
+    }
+    .trust-lbl { font-size: 13px; color: var(--co-muted); margin-top: 4px; }
+
+    /* ── DARK CAPABILITY BAND ── */
+    .dark-band { background: var(--co-deep-green); padding: 80px 0; }
+    .dark-band .section-eyebrow { color: rgba(255,255,255,0.4); }
+    .dark-band h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+        font-weight: 400; letter-spacing: -0.03em;
+        color: #fff; line-height: 1.1; margin-bottom: 12px;
+    }
+    .dark-band .sub { font-size: 15px; color: rgba(255,255,255,0.55); line-height: 1.6; max-width: 380px; }
+    .cap-card {
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: var(--r-sm); padding: 22px; transition: background 0.2s;
+    }
+    .cap-card:hover { background: rgba(255,255,255,0.1); }
+    .cap-icon {
+        width: 38px; height: 38px; border-radius: var(--r-xs);
+        background: rgba(255,255,255,0.1);
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(255,255,255,0.75); font-size: 15px; margin-bottom: 14px;
+    }
+    .cap-card h4 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 6px;
+    }
+    .cap-card p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; margin: 0; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { padding: 72px 0; background: var(--co-stone); }
+    .how-steps {
+        border: 1px solid var(--co-hairline); border-radius: var(--r-sm);
+        overflow: hidden; background: var(--co-canvas);
+    }
+    .how-step {
+        display: flex; align-items: flex-start; gap: 18px;
+        padding: 22px 24px; border-bottom: 1px solid var(--co-hairline);
+        transition: background 0.12s;
+    }
+    .how-step:last-child { border-bottom: none; }
+    .how-step:hover { background: var(--co-stone); }
+    .how-num {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+        letter-spacing: 1px; color: var(--co-muted); background: var(--co-stone);
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xl);
+        padding: 3px 10px; white-space: nowrap; flex-shrink: 0; margin-top: 3px;
+    }
+    .how-icon {
+        width: 38px; height: 38px; border-radius: var(--r-xs);
+        background: var(--co-primary); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px; flex-shrink: 0;
+    }
+    .how-content h5 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px; font-weight: 600; color: var(--co-primary); margin: 0 0 4px;
+    }
+    .how-content p { font-size: 13px; color: var(--co-body-muted); margin: 0; line-height: 1.55; }
+
+    /* ── CTA BAND ── */
+    .cta-band { background: var(--co-primary); padding: 72px 0; text-align: center; }
+    .cta-band h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+        font-weight: 400; letter-spacing: -0.03em;
+        color: #fff; margin-bottom: 12px;
+    }
+    .cta-band p { font-size: 15px; color: rgba(255,255,255,0.5); margin-bottom: 28px; }
+    .btn-cta-white {
+        background: #fff; color: var(--co-primary);
+        border: none; border-radius: var(--r-xs);
+        padding: 13px 28px; font-weight: 500; font-size: 15px;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: background 0.15s;
+    }
+    .btn-cta-white:hover { background: var(--co-stone); color: var(--co-primary); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+        .trust-grid { grid-template-columns: repeat(2, 1fr); }
+        .trust-item:nth-child(2) { border-right: none; }
+        .trust-item:nth-child(3),
+        .trust-item:nth-child(4) { border-top: 1px solid var(--co-hairline); }
+        .trust-item:nth-child(4) { border-right: none; }
+        .cat-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    }
+    @media (max-width: 480px) {
+        .product-grid { grid-template-columns: 1fr 1fr; }
+        .hero-h1 { font-size: 2rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content_outer %}
+
+<!-- ═══ HERO ═══ -->
+<div class="hero-wrap">
+    <div class="hero-eyebrow">
+        <i class="fa-solid fa-leaf"></i> Platform B2B &mdash; Supplier Kopi
+    </div>
+    <h1 class="hero-h1">
+        Semua kebutuhan kafe,<br>dari <em>satu supplier</em>
+    </h1>
+    <p class="hero-sub">
+        Biji kopi, susu, sirup, hingga packaging — harga grosir,
+        pengiriman terjadwal, pembayaran aman via Midtrans.
+    </p>
+    <form method="get" action="/produk/" class="hero-search">
+        <div class="hero-search-inner">
+            <span class="hero-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" name="q" placeholder="Cari biji kopi, susu, sirup..."
+                   class="hero-search-input" autocomplete="off">
+            <button type="submit" class="hero-search-btn">Cari</button>
+        </div>
+    </form>
+    <div class="hero-actions">
+        <a href="/produk/" class="btn-hero-primary">
+            <i class="fa-solid fa-store" style="font-size:13px;"></i> Lihat Katalog
+        </a>
+        {% if not user.is_authenticated %}
+        <a href="/accounts/register/" class="btn-hero-secondary">
+            Daftar Kafe — Gratis
+        </a>
+        {% else %}
+        <a href="/cart/" class="btn-hero-secondary">
+            <i class="fa-solid fa-cart-shopping" style="font-size:13px;"></i> Keranjang Saya
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══ CATEGORY GRID ═══ -->
+{% if categories %}
+<div class="cat-section">
+    <div class="section-inner">
+            <div class="cat-topbar">
+                <div>
+                    <span class="section-eyebrow">Kategori</span>
+                    <h2 class="section-heading">Belanja berdasarkan kategori</h2>
+                </div>
+                <a href="/produk/" class="link-see-all">
+                    Semua produk <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>
+                </a>
+            </div>
+            <div class="cat-grid">
+                {% for cat in categories %}
+                <a href="/produk/?category={{ cat.slug }}" class="cat-card">
+                    <div class="cat-icon"><i class="fa-solid fa-mug-hot"></i></div>
+                    <div>
+                        <div class="cat-name">{{ cat.name }}</div>
+                        <div class="cat-count">{{ cat.product_count }} produk</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+</div>
+{% endif %}
+
+<!-- ═══ FEATURED PRODUCTS ═══ -->
+<div class="products-section">
+    <div class="section-inner">
+            <div class="section-topbar">
+                <div>
+                    <span class="section-eyebrow">Produk Terbaru</span>
+                    <h2 class="section-heading">Baru masuk di katalog</h2>
+                </div>
+                <a href="/produk/" class="link-see-all">
+                    Lihat semua <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>
+                </a>
+            </div>
+
+            {% if featured_products %}
+            <div class="product-grid">
+                {% for product in featured_products %}
+                <div class="product-card">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="product-img-ph"><i class="fa-solid fa-mug-hot"></i></div>
+                    {% endif %}
+
+                    <div class="product-body">
+                        <div class="product-cat-mono">
+                            {% if product.category %}{{ product.category.name }}{% else %}Produk{% endif %}
+                        </div>
+                        <div class="product-name">{{ product.name }}</div>
+
+                        <div class="product-badges">
+                            {% if product.is_in_stock %}
+                                <span class="badge-ok">
+                                    <i class="fa-solid fa-circle-check" style="font-size:8px;"></i>
+                                    {{ product.stock }} {{ product.unit }}
+                                </span>
+                            {% else %}
+                                <span class="badge-out">Stok Habis</span>
+                            {% endif %}
+                            <span class="badge-moq">Min. {{ product.minimum_order }} {{ product.unit }}</span>
+                        </div>
+
+                        <div class="product-footer">
+                            <div class="product-price">
+                                Rp {{ product.price|floatformat:0 }}
+                                <span class="unit">/ {{ product.unit }}</span>
+                            </div>
+                            {% if user.is_authenticated and user.is_cafe %}
+                                {% if product.is_in_stock %}
+                                <form method="post" action="/cart/add/{{ product.id }}/" style="margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="{{ product.minimum_order }}">
+                                    <button type="submit" class="btn-add-sm">
+                                        <i class="fa-solid fa-cart-plus" style="font-size:11px;"></i>
+                                        Tambah ke Keranjang
+                                    </button>
+                                </form>
+                                {% else %}
+                                <button class="btn-add-sm" disabled>Stok Habis</button>
+                                {% endif %}
+                            {% else %}
+                                <a href="/produk/{{ product.slug }}/" class="btn-detail-sm">Lihat Detail</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align:center; padding:64px 0; color:var(--co-muted);">
+                <i class="fa-solid fa-mug-hot" style="font-size:2.8rem; opacity:0.25; display:block; margin-bottom:16px;"></i>
+                <p style="font-size:14px;">Belum ada produk tersedia.</p>
+            </div>
+            {% endif %}
+    </div>
+</div>
+
+<!-- ═══ TRUST STRIP ═══ -->
+<div class="trust-section">
+    <div class="section-inner">
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <span class="trust-num">{{ total_products }}+</span>
+                    <div class="trust-lbl">Produk Tersedia</div>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-num">{{ categories|length }}</span>
+                    <div class="trust-lbl">Kategori Produk</div>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-num">B2B</span>
+                    <div class="trust-lbl">Harga Grosir</div>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-num">100%</span>
+                    <div class="trust-lbl">Kualitas Terjamin</div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!-- ═══ CAPABILITY BAND ═══ -->
+<div class="dark-band">
+    <div class="section-inner">
+            <div class="row align-items-start g-5">
+                <div class="col-lg-4">
+                    <span class="section-eyebrow">Platform</span>
+                    <h2>Infrastruktur B2B<br>untuk kafe modern</h2>
+                    <p class="sub">
+                        Dari pemesanan hingga pengiriman — semua terintegrasi dalam satu platform.
+                    </p>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="cap-card">
+                                <div class="cap-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                                <h4>Pemesanan Mudah</h4>
+                                <p>Tambah produk ke keranjang, atur jumlah, dan checkout dalam hitungan menit.</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="cap-card">
+                                <div class="cap-icon"><i class="fa-solid fa-credit-card"></i></div>
+                                <h4>Pembayaran Aman</h4>
+                                <p>Terintegrasi Midtrans — transfer bank, kartu kredit, dan dompet digital.</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="cap-card">
+                                <div class="cap-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                                <h4>Pengiriman Terlacak</h4>
+                                <p>Pantau status pesanan dari konfirmasi hingga tiba di kafe kamu secara real-time.</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="cap-card">
+                                <div class="cap-icon"><i class="fa-solid fa-chart-line"></i></div>
+                                <h4>Analitik Demand</h4>
+                                <p>Supplier mendapat insight prediktif untuk stok dan perencanaan produksi.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<div class="how-section">
+    <div class="section-inner">
+            <div class="row align-items-start g-5">
+                <div class="col-lg-4">
+                    <span class="section-eyebrow">Cara Kerja</span>
+                    <h2 class="section-heading">Tiga langkah,<br>mulai pesan sekarang</h2>
+                </div>
+                <div class="col-lg-8">
+                    <div class="how-steps">
+                        <div class="how-step">
+                            <span class="how-num">01</span>
+                            <div class="how-icon"><i class="fa-solid fa-user-plus"></i></div>
+                            <div class="how-content">
+                                <h5>Daftar &amp; Login</h5>
+                                <p>Buat akun kafe gratis. Isi informasi kafe dan langsung bisa belanja.</p>
+                            </div>
+                        </div>
+                        <div class="how-step">
+                            <span class="how-num">02</span>
+                            <div class="how-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                            <div class="how-content">
+                                <h5>Pilih Produk &amp; Checkout</h5>
+                                <p>Browse katalog, tambah ke keranjang, isi alamat dan bayar — semua dalam satu halaman.</p>
+                            </div>
+                        </div>
+                        <div class="how-step">
+                            <span class="how-num">03</span>
+                            <div class="how-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                            <div class="how-content">
+                                <h5>Terima di Kafe</h5>
+                                <p>Pantau pengiriman secara real-time. Produk tiba langsung di kafe kamu.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!-- ═══ CTA BAND ═══ -->
+{% if not user.is_authenticated %}
+<div class="cta-band">
+    <div class="section-inner">
+        <span class="section-eyebrow" style="color:rgba(255,255,255,0.35);">Mulai sekarang</span>
+        <h2>Daftar kafe kamu,<br>gratis selamanya</h2>
+        <p>Bergabung dan akses semua produk dengan harga grosir.</p>
+        <a href="/accounts/register/" class="btn-cta-white">
+            <i class="fa-solid fa-store" style="font-size:13px;"></i>
+            Daftar Kafe — Gratis
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

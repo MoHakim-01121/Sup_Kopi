@@ -1,0 +1,34 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Link Tidak Valid – Sup Kopi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" style="padding: 60px 0;">
+    <div class="col-md-5 text-center">
+        <div style="font-size:3rem; color:var(--co-muted); margin-bottom:16px;">
+            <i class="fa-solid fa-link-slash"></i>
+        </div>
+        {% if reason == 'used' %}
+        <h2 style="font-size:1.3rem; font-weight:700; color:var(--co-ink);">Link Sudah Digunakan</h2>
+        <p style="font-size:0.9rem; color:var(--co-muted); margin-top:8px;">
+            Akun untuk undangan ini sudah dibuat sebelumnya.<br>
+            Silakan login menggunakan akun kamu.
+        </p>
+        <a href="/accounts/login/" class="btn btn-dark mt-3" style="padding:10px 28px;">
+            Masuk Sekarang
+        </a>
+        {% elif reason == 'expired' %}
+        <h2 style="font-size:1.3rem; font-weight:700; color:var(--co-ink);">Link Sudah Kedaluwarsa</h2>
+        <p style="font-size:0.9rem; color:var(--co-muted); margin-top:8px;">
+            Link undangan berlaku selama 48 jam dan sudah melewati batas waktu.<br>
+            Minta owner untuk mengirim ulang undangan.
+        </p>
+        {% else %}
+        <h2 style="font-size:1.3rem; font-weight:700; color:var(--co-ink);">Link Tidak Valid</h2>
+        <p style="font-size:0.9rem; color:var(--co-muted); margin-top:8px;">
+            Link undangan tidak ditemukan atau tidak valid.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

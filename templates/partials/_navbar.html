@@ -1,0 +1,71 @@
+<nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+
+        <!-- Zone 1: Logo -->
+        <a href="/" class="nav-brand" aria-label="Sup Kopi - Home">
+            <div class="brand-icon"><i class="fa-solid fa-mug-hot"></i></div>
+            <span><span class="brand-sup">Sup</span><span class="brand-kopi">Kopi</span></span>
+        </a>
+
+        <!-- Zone 2: Center links -->
+        <ul class="nav-links" role="list">
+            <li class="nav-item">
+                <a href="/produk/" class="{% if '/produk' in request.path %}active{% endif %}">Produk</a>
+            </li>
+        </ul>
+
+        <!-- Zone 3: Actions -->
+        <div class="nav-actions">
+            {% if user.is_authenticated %}
+                <a href="/cart/" class="nav-action-link cart-badge" aria-label="Keranjang">
+                    <i class="fa-solid fa-cart-shopping" style="font-size:15px;"></i>
+                    <span class="cart-count" id="cartCountBadge"
+                          style="{% if not cart_count %}display:none;{% endif %}"
+                          aria-label="{{ cart_count|default:0 }} item">{{ cart_count|default:0 }}</span>
+                </a>
+                <div class="user-dropdown">
+                    <button class="user-dropdown-btn" id="userDropBtn" aria-expanded="false" aria-haspopup="true">
+                        <div class="user-avatar-sm">{{ user.username|first|upper }}</div>
+                        <span class="user-cafe-name">{{ user.username }}</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size:10px; color:var(--co-muted);"></i>
+                    </button>
+                    <div class="dropdown-menu-custom" id="userDropMenu" role="menu">
+                        <div class="dropdown-header">
+                            <span class="cafe-label">Akun Kafe</span>
+                            <div class="cafe-name">
+                                {% if user.cafe_profile.cafe_name %}{{ user.cafe_profile.cafe_name }}{% else %}{{ user.username }}{% endif %}
+                            </div>
+                        </div>
+                        <a href="/cafe/dashboard/" class="dropdown-item-custom"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+                        <a href="/orders/" class="dropdown-item-custom"><i class="fa-solid fa-receipt"></i> Pesanan Saya</a>
+                        <a href="/accounts/profile/" class="dropdown-item-custom"><i class="fa-solid fa-user"></i> Profil Kafe</a>
+                        <div class="dropdown-divider-custom"></div>
+                        <a href="/accounts/logout/" class="dropdown-item-custom dropdown-item-danger">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="/accounts/login/" class="nav-action-link">Masuk</a>
+                <a href="/accounts/register/" class="nav-cta">Daftar Kafe</a>
+            {% endif %}
+            <button class="nav-hamburger" id="navHamburger" aria-expanded="false" aria-label="Menu">
+                <i class="fa-solid fa-bars" id="hamburgerIcon"></i>
+            </button>
+        </div>
+
+    </div>
+</nav>
+
+<div class="nav-mobile-drawer" id="mobileDrawer" role="navigation">
+    <a href="/produk/">Produk</a>
+    {% if user.is_authenticated %}
+        <a href="/cart/"><i class="fa-solid fa-cart-shopping me-2" style="font-size:12px;"></i>Keranjang</a>
+        <a href="/orders/">Pesanan</a>
+        <a href="/cafe/dashboard/"><i class="fa-solid fa-gauge me-2" style="font-size:12px;"></i>Dashboard</a>
+        <a href="/accounts/logout/" class="mobile-cta">Logout</a>
+    {% else %}
+        <a href="/accounts/login/">Masuk</a>
+        <a href="/accounts/register/" class="mobile-cta">Daftar Kafe</a>
+    {% endif %}
+</div>
