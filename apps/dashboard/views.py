@@ -16,7 +16,6 @@ from apps.accounts.models import SupplierStaff, StaffInvitation, User
 from apps.orders.models import Order, OrderItem
 from apps.catalog.models import Product, Category
 from apps.payments.models import Payment
-from apps.delivery.models import Delivery
 
 PAGE_SIZE = 15
 PAID_STATUSES = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
@@ -29,13 +28,6 @@ def _filtered_orders(request):
         qs = qs.filter(status=status)
     return qs, status
 
-
-def _filtered_deliveries(request):
-    qs = Delivery.objects.select_related('order__cafe__cafe_profile').order_by('-created_at')
-    status = request.GET.get('status')
-    if status:
-        qs = qs.filter(status=status)
-    return qs, status
 
 
 def _unique_slug(name):
@@ -176,24 +168,6 @@ def export_orders_csv(request):
     return response
 
 
-@supplier_admin_required
-def export_deliveries_csv(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="deliveries.csv"'
-    writer = csv.writer(response)
-    writer.writerow(['No. Order', 'Kafe', 'Kurir', 'No. Resi', 'Status', 'Estimasi Tiba'])
-    deliveries, _ = _filtered_deliveries(request)
-    for d in deliveries:
-        writer.writerow([
-            d.order.order_number,
-            _cafe_name(d.order.cafe),
-            d.courier_name,
-            d.tracking_number,
-            d.get_status_display(),
-            d.estimated_delivery_date or '',
-        ])
-    return response
-
 
 @supplier_admin_required
 def product_management(request):
@@ -246,18 +220,6 @@ def edit_product(request, product_id):
         'categories': categories,
     })
 
-
-@supplier_required
-def delivery_list(request):
-    deliveries, status_filter = _filtered_deliveries(request)
-    paginator = Paginator(deliveries, PAGE_SIZE)
-    page = paginator.get_page(request.GET.get('page'))
-    return render(request, 'supplier/delivery_list.html', {
-        'deliveries': page,
-        'page_obj': page,
-        'status_filter': status_filter,
-        'status_choices': Delivery.STATUS_CHOICES,
-    })
 
 
 @supplier_admin_required

@@ -64,8 +64,6 @@
     .sidebar-link.active {
         color: #fff;
         background: rgba(255,255,255,0.1);
-        border-left: 2px solid var(--co-coral);
-        padding-left: 14px;
     }
     .sidebar-link-danger { color: rgba(255,100,100,0.55) !important; }
     .sidebar-link-danger:hover { color: #fc9090 !important; background: rgba(255,80,80,0.08) !important; }
@@ -259,10 +257,8 @@
                class="sidebar-link {% if request.path == '/supplier/dashboard/' %}active{% endif %}">
                 <i class="fa-solid fa-chart-pie"></i> Dashboard
             </a>
-            {% endif %}
 
             <div class="sidebar-section">Transaksi</div>
-            {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
             <a href="/supplier/orders/"
                class="sidebar-link {% if '/supplier/orders' in request.path %}active{% endif %}">
                 <i class="fa-solid fa-box-open"></i> Kelola Order
@@ -274,23 +270,13 @@
                 </span>
                 {% endif %}
             </a>
-            {% endif %}
 
-            {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
             <div class="sidebar-section">Katalog</div>
             <a href="/supplier/products/"
                class="sidebar-link {% if '/supplier/products' in request.path %}active{% endif %}">
                 <i class="fa-solid fa-bag-shopping"></i> Daftar Produk
             </a>
-            {% endif %}
 
-            <div class="sidebar-section">Logistik</div>
-            <a href="/supplier/deliveries/"
-               class="sidebar-link {% if '/supplier/deliveries' in request.path %}active{% endif %}">
-                <i class="fa-solid fa-truck-fast"></i> Pengiriman
-            </a>
-
-            {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
             <div class="sidebar-section">Analitik</div>
             <a href="/supplier/analytics/"
                class="sidebar-link {% if '/supplier/analytics' in request.path %}active{% endif %}">
