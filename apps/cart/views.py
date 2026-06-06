@@ -122,3 +122,4 @@ def checkout(request):
         'zones': zones,
         'profile': profile,
     })
+

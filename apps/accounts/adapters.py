@@ -5,6 +5,10 @@ from .models import CafeProfile
 
 
 class CafeAccountAdapter(DefaultAccountAdapter):
+    def add_message(self, request, level, message_template, message_context=None, extra_tags=''):
+        # Suppress allauth's built-in login/signup messages; we show our own
+        pass
+
     def get_login_redirect_url(self, request):
         if request.user.is_any_supplier:
             return '/supplier/dashboard/'
