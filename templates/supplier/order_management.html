@@ -1,81 +1,110 @@
 {% extends 'base_supplier.html' %}
 
-{% block title %}Kelola Order – Sup Kopi{% endblock %}
+{% block title %}Kelola Order — Sup Kopi{% endblock %}
 {% block page_title %}Kelola Order{% endblock %}
 
 {% block content %}
 
-<!-- Filter Status -->
-<div class="section-card mb-3">
-    <div class="section-body" style="padding-top:14px; padding-bottom:14px;">
-        <div class="d-flex gap-2 flex-wrap align-items-center">
-            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--co-muted); text-transform:uppercase; letter-spacing:1px; margin-right:4px;">Filter:</span>
-            <a href="/supplier/orders/"
-               class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                Semua
-            </a>
-            {% for value, label in status_choices %}
-            <a href="/supplier/orders/?status={{ value }}"
-               class="btn btn-sm {% if status_filter == value %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                {{ label }}
-            </a>
-            {% endfor %}
-        </div>
+<!-- Intro -->
+<div class="sd-intro">
+    <div>
+        <span class="ey">Transaksi</span>
+        <h1>Kelola Order</h1>
+        <p class="sub">Pantau dan kelola seluruh pesanan masuk dari kafe.</p>
+    </div>
+    <a href="/supplier/orders/export/{% if status_filter %}?status={{ status_filter }}{% endif %}" class="sd-seeall">
+        <i class="fa-solid fa-file-arrow-down" style="font-size:11px;"></i> Export CSV
+    </a>
+</div>
+
+<!-- Search -->
+<form method="get" action="/supplier/orders/" class="sd-toolbar">
+    {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+    <div class="sd-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Cari nomor order atau nama kafe...">
+    </div>
+    <button type="submit" class="sd-pill active" style="border:none;">Cari</button>
+    {% if request.GET.q %}
+    <a href="/supplier/orders/{% if status_filter %}?status={{ status_filter }}{% endif %}" class="sd-pill">Reset</a>
+    {% endif %}
+</form>
+
+<!-- Status filter pills -->
+<div class="sd-toolbar">
+    <span class="sd-filter-label">Status</span>
+    <a href="/supplier/orders/{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}"
+       class="sd-pill {% if not status_filter %}active{% endif %}">Semua</a>
+    {% for value, label in status_choices %}
+    <a href="/supplier/orders/?status={{ value }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+       class="sd-pill {% if status_filter == value %}active{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+<!-- Orders table -->
+<div class="sd-card">
+    <div class="sd-table-wrap">
+        <table class="sd-table">
+            <thead>
+                <tr>
+                    <th>No. Order</th>
+                    <th>Kafe</th>
+                    <th>Tanggal</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><span class="sd-onum">{{ order.order_number }}</span></td>
+                    <td>{{ order.cafe.cafe_profile.cafe_name|default:"–" }}</td>
+                    <td><span class="sd-mono sd-muted">{{ order.created_at|date:"d M Y, H:i" }}</span></td>
+                    <td><span class="sd-amount">Rp {{ order.total_amount|floatformat:0 }}</span></td>
+                    <td>
+                        <span class="badge
+                            {% if order.status == 'PENDING' %}badge-pending
+                            {% elif order.status == 'CONFIRMED' %}badge-confirmed
+                            {% elif order.status == 'PROCESSING' %}badge-processing
+                            {% elif order.status == 'SHIPPED' %}badge-shipped
+                            {% elif order.status == 'DELIVERED' %}badge-delivered
+                            {% elif order.status == 'CANCELLED' %}badge-cancelled
+                            {% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="text-align:right;">
+                        <a href="/supplier/orders/{{ order.order_number }}/" class="sd-detail-link">
+                            Detail <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="sd-empty">
+                            <i class="fa-solid fa-box-open"></i>
+                            Tidak ada order{% if status_filter %} dengan status ini{% endif %}.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Orders Table -->
-<div class="section-card">
-    <div class="section-table">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>No. Order</th>
-                        <th>Kafe</th>
-                        <th>Tanggal</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;">
-                            {{ order.order_number }}
-                        </td>
-                        <td style="font-size:13px;">{{ order.cafe.cafe_profile.cafe_name|default:"–" }}</td>
-                        <td style="font-size:12px; color:var(--co-muted);">{{ order.created_at|date:"d M Y, H:i" }}</td>
-                        <td style="font-size:13px;">Rp {{ order.total_amount|floatformat:0 }}</td>
-                        <td>
-                            <span class="badge
-                                {% if order.status == 'PENDING' %}badge-pending
-                                {% elif order.status == 'CONFIRMED' %}badge-confirmed
-                                {% elif order.status == 'PROCESSING' %}badge-processing
-                                {% elif order.status == 'SHIPPED' %}badge-shipped
-                                {% elif order.status == 'DELIVERED' %}badge-delivered
-                                {% elif order.status == 'CANCELLED' %}badge-cancelled
-                                {% endif %}">
-                                {{ order.get_status_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="/supplier/orders/{{ order.order_number }}/" class="btn btn-sm btn-outline-secondary">Detail</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding:48px 0; color:var(--co-muted); font-size:13px;">
-                            <i class="fa-solid fa-box-open" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:12px;"></i>
-                            Tidak ada order{% if status_filter %} dengan status ini{% endif %}.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="sd-pagination">
+    {% if page_obj.has_previous %}
+    <a class="sd-pill" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">‹ Sebelumnya</a>
+    {% endif %}
+    <span class="sd-page-info">Halaman {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a class="sd-pill" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Berikutnya ›</a>
+    {% endif %}
 </div>
+{% endif %}
 
 {% endblock %}

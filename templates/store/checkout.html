@@ -7,7 +7,7 @@
     /* Section card — numbered circle unique to checkout */
     .co-card-header .card-num {
         width: 22px; height: 22px; border-radius: 50%;
-        background: var(--co-primary); color: #fff;
+        background: var(--co-coral); color: #fff;
         font-family: 'JetBrains Mono', monospace;
         font-size: 10px; font-weight: 700;
         display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -23,8 +23,8 @@
         font-family: inherit;
     }
     .form-textarea:focus {
-        border-color: var(--co-form-focus);
-        box-shadow: 0 0 0 3px rgba(155,96,170,0.12); outline: none;
+        border-color: var(--co-coral);
+        box-shadow: 0 0 0 3px rgba(255,119,89,0.15); outline: none;
     }
 
     /* Shipping zone options */
@@ -39,10 +39,10 @@
         transition: border-color 0.15s, background 0.15s;
         gap: 12px;
     }
-    .zone-label:hover { border-color: var(--co-primary); background: var(--co-stone); }
+    .zone-label:hover { border-color: var(--co-coral); background: var(--co-stone); }
     .zone-option input[type="radio"]:checked + .zone-label {
-        border-color: var(--co-primary);
-        background: var(--co-pale-blue);
+        border-color: var(--co-coral);
+        background: rgba(255,119,89,0.07);
     }
     .zone-label .zone-info { flex: 1; }
     .zone-label .zone-name { font-size: 14px; font-weight: 600; color: var(--co-primary); margin-bottom: 2px; }
@@ -94,12 +94,12 @@
     }
     .btn-confirm {
         display: block; width: 100%;
-        background: var(--co-primary); color: #fff;
+        background: var(--co-coral); color: #fff;
         border: none; border-radius: var(--r-sm);
-        padding: 13px; font-size: 14px; font-weight: 500;
-        cursor: pointer; transition: background 0.15s;
+        padding: 13px; font-size: 14px; font-weight: 600;
+        cursor: pointer; transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
     }
-    .btn-confirm:hover:not(:disabled) { background: var(--co-primary-hover); }
+    .btn-confirm:hover:not(:disabled) { background: #e8593b; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(255,119,89,0.28); }
     .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-back {
         display: block; text-align: center; margin-top: 10px;
@@ -176,6 +176,7 @@
                             id="zone_{{ zone.id }}"
                             value="{{ zone.id }}"
                             data-cost="{{ zone.shipping_cost }}"
+                            {% if zone.id == last_zone_id %}checked{% endif %}
                             required>
                         <label class="zone-label" for="zone_{{ zone.id }}">
                             <div class="zone-info">
@@ -242,11 +243,53 @@
                         <span class="value" id="totalDisplay">—</span>
                     </div>
 
+                    {% if credit and credit.is_enabled %}
+                    <div style="margin-bottom:12px;">
+                        <div style="font-size:12px;font-weight:600;color:var(--co-muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Cara Bayar</div>
+                        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--co-hairline);border-radius:6px;cursor:pointer;margin-bottom:6px;font-size:13.5px;" id="labelOnline">
+                            <input type="radio" name="payment_method" value="online" checked onchange="togglePaymentLabel()">
+                            <div>
+                                <div style="font-weight:600;color:var(--co-primary);">Bayar Sekarang</div>
+                                <div style="font-size:11px;color:var(--co-muted);">Pilih channel (Transfer, QRIS, GoPay, dll) di langkah berikutnya</div>
+                            </div>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--co-hairline);border-radius:6px;font-size:13.5px;cursor:{% if credit_block %}not-allowed{% else %}pointer{% endif %};{% if credit_block %}opacity:0.6;{% endif %}" id="labelCredit">
+                            <input type="radio" name="payment_method" value="credit" onchange="togglePaymentLabel()"{% if credit_block %} disabled{% endif %}>
+                            <div>
+                                <div style="font-weight:600;color:var(--co-primary);">Bayar Nanti — Kredit (NET {{ credit.payment_term_days }})</div>
+                                {% if credit_block %}
+                                <div style="font-size:11px;color:var(--co-error);"><i class="fa-solid fa-circle-exclamation"></i> {{ credit_block }}</div>
+                                {% else %}
+                                <div style="font-size:11px;color:var(--co-muted);">Tagih belakangan · sisa kredit Rp {{ credit.available_credit|floatformat:0 }}</div>
+                                {% endif %}
+                            </div>
+                        </label>
+                        {% if not credit_block %}
+                        <div id="creditDueNote" data-term="{{ credit.payment_term_days }}" style="display:none;margin-top:8px;padding:10px 12px;background:var(--co-amber-bg);border:1px solid var(--co-amber-border);border-radius:6px;font-size:11.5px;color:var(--co-amber-text);line-height:1.5;">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            Tagihan <b>Rp <span id="creditDueAmt">—</span></b> akan jatuh tempo pada <b id="creditDueDate">—</b> (NET {{ credit.payment_term_days }}). Dengan melanjutkan, kamu setuju melunasi sebelum tanggal tersebut.
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if zones %}
                     <button type="submit" class="btn-confirm" id="confirmBtn"
                         data-subtotal="{{ cart.subtotal }}" disabled>
-                        Buat Order &amp; Bayar
-                        <i class="fa-solid fa-lock ms-2" style="font-size:11px;"></i>
+                        <span id="confirmBtnContent">
+                            Buat Order &amp; Bayar
+                            <i class="fa-solid fa-lock ms-2" style="font-size:11px;"></i>
+                        </span>
+                        <span id="confirmBtnLoading" style="display:none;">
+                            <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Memproses...
+                        </span>
                     </button>
+                    {% else %}
+                    <button type="button" class="btn-confirm" disabled style="opacity:0.45; cursor:not-allowed;">
+                        <i class="fa-solid fa-triangle-exclamation me-2" style="font-size:11px;"></i>
+                        Zona Pengiriman Belum Tersedia
+                    </button>
+                    {% endif %}
                     <a href="/cart/" class="btn-back">
                         <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i>Kembali ke Keranjang
                     </a>
@@ -272,15 +315,68 @@
         return 'Rp ' + Math.round(n).toLocaleString('id-ID');
     }
 
+    function applyZone(radio) {
+        var cost = parseFloat(radio.dataset.cost) || 0;
+        shipping.textContent = fmt(cost);
+        shipping.style.color = '';
+        total.textContent    = fmt(subtotal + cost);
+        btn.disabled = false;
+        if (typeof togglePaymentLabel === 'function') togglePaymentLabel();
+    }
+
     radios.forEach(function (radio) {
-        radio.addEventListener('change', function () {
-            var cost = parseFloat(this.dataset.cost) || 0;
-            shipping.textContent = fmt(cost);
-            shipping.style.color = '';
-            total.textContent    = fmt(subtotal + cost);
-            btn.disabled = false;
-        });
+        radio.addEventListener('change', function () { applyZone(this); });
     });
+
+    // Pre-selected zone (diingat dari order terakhir) → langsung hitung total
+    var preselected = document.querySelector('input[name="shipping_zone"]:checked');
+    if (preselected) applyZone(preselected);
+
+    var form = document.querySelector('form[method="post"]');
+    if (form && btn) {
+        form.addEventListener('submit', function () {
+            if (btn.disabled) return;
+            var content = document.getElementById('confirmBtnContent');
+            var loading = document.getElementById('confirmBtnLoading');
+            if (content) content.style.display = 'none';
+            if (loading) loading.style.display = 'inline';
+            btn.disabled = true;
+        });
+    }
 })();
+
+function togglePaymentLabel() {
+    var online  = document.getElementById('labelOnline');
+    var credit  = document.getElementById('labelCredit');
+    var btn     = document.getElementById('confirmBtn');
+    var content = document.getElementById('confirmBtnContent');
+    var note    = document.getElementById('creditDueNote');
+    var picked  = document.querySelector('input[name="payment_method"]:checked');
+    if (!online || !credit || !picked) return;
+    var isCredit = picked.value === 'credit';
+    online.style.borderColor = isCredit ? 'var(--co-hairline)' : 'var(--co-coral)';
+    credit.style.borderColor = isCredit ? 'var(--co-coral)' : 'var(--co-hairline)';
+    if (content) content.innerHTML = isCredit
+        ? 'Buat Order <span style="font-size:11px;">(Bayar Nanti)</span>'
+        : 'Buat Order &amp; Bayar <i class="fa-solid fa-lock ms-2" style="font-size:11px;"></i>';
+
+    // Penegasan jatuh tempo — muncul saat kredit dipilih, ikut nilai & zona terkini
+    if (note) {
+        if (isCredit) {
+            note.style.display = 'block';
+            var subtotal = parseFloat(btn.dataset.subtotal) || 0;
+            var zone = document.querySelector('input[name="shipping_zone"]:checked');
+            var cost = zone ? (parseFloat(zone.dataset.cost) || 0) : 0;
+            var amtEl = document.getElementById('creditDueAmt');
+            if (amtEl) amtEl.textContent = Math.round(subtotal + cost).toLocaleString('id-ID');
+            var term = parseInt(note.dataset.term, 10) || 0;
+            var d = new Date(); d.setDate(d.getDate() + term);
+            var dateEl = document.getElementById('creditDueDate');
+            if (dateEl) dateEl.textContent = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        } else {
+            note.style.display = 'none';
+        }
+    }
+}
 </script>
 {% endblock %}

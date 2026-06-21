@@ -103,14 +103,18 @@
     <div class="success-icon-ring" style="background:var(--co-amber-bg);border-color:var(--co-amber-border);">
         <i class="fa-solid fa-clock" style="color:var(--co-amber-text);"></i>
     </div>
-    <h1 class="success-title">Menunggu Konfirmasi</h1>
-    <p class="success-sub">Pembayaran sedang diverifikasi. Halaman ini akan diperbarui otomatis.</p>
+    <h1 class="success-title">Pembayaran Diproses</h1>
+    <p class="success-sub">Kami sedang menunggu konfirmasi pembayaran. Status order akan otomatis diperbarui begitu pembayaran terkonfirmasi.</p>
+    <div style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--co-amber-text);background:var(--co-amber-bg);border:1px solid var(--co-amber-border);border-radius:var(--r-xl);padding:5px 14px;margin-bottom:4px;">
+        <i class="fa-solid fa-hourglass-half" style="font-size:10px;"></i>
+        Menunggu konfirmasi pembayaran
+    </div>
     {% else %}
     <div class="success-icon-ring">
         <i class="fa-solid fa-check"></i>
     </div>
     <h1 class="success-title">Pembayaran Berhasil!</h1>
-    <p class="success-sub">Order kamu sudah kami terima dan akan segera diproses oleh supplier.</p>
+    <p class="success-sub">Pembayaran dikonfirmasi. Supplier akan segera memproses pesanan kamu.</p>
     {% endif %}
     <div class="order-num-pill">{{ order.order_number }}</div>
 

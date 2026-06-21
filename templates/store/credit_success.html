@@ -1,0 +1,155 @@
+{% extends 'base_store.html' %}
+
+{% block title %}Order dengan Kredit — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    .success-wrap { max-width: 480px; margin: 48px auto; text-align: center; }
+
+    .success-icon-ring {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: var(--co-pale-green); border: 2px solid #a7f3c0;
+        display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;
+    }
+    .success-icon-ring i { font-size: 1.9rem; color: var(--co-deep-green); }
+
+    .success-title {
+        font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 400;
+        letter-spacing: -0.03em; color: var(--co-primary); margin-bottom: 10px;
+    }
+    .success-sub { font-size: 15px; color: var(--co-body-muted); line-height: 1.6; margin-bottom: 6px; }
+    .order-num-pill {
+        display: inline-block; font-family: 'JetBrains Mono', monospace;
+        font-size: 12px; font-weight: 600; background: var(--co-stone);
+        border: 1px solid var(--co-hairline); border-radius: var(--r-xs);
+        padding: 5px 14px; color: var(--co-primary); margin: 12px 0 24px;
+    }
+
+    /* Due-date highlight */
+    .due-banner {
+        display: flex; align-items: center; gap: 12px; text-align: left;
+        background: var(--co-amber-bg); border: 1px solid var(--co-amber-border);
+        border-radius: var(--r-md); padding: 14px 18px; margin-bottom: 24px;
+    }
+    .due-banner .ic {
+        width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+        background: #fff; border: 1px solid var(--co-amber-border);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--co-amber-dim); font-size: 15px;
+    }
+    .due-banner .lbl {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--co-amber-dim); display: block; margin-bottom: 2px;
+    }
+    .due-banner .val { font-size: 15px; font-weight: 600; color: var(--co-amber-text); }
+    .due-banner .sub { font-size: 11px; color: var(--co-amber-text); opacity: 0.85; margin-top: 1px; }
+
+    .info-card {
+        background: var(--co-canvas); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-sm); padding: 20px 24px; margin-bottom: 24px; text-align: left;
+    }
+    .info-card-row { display: flex; gap: 12px; margin-bottom: 10px; }
+    .info-card-row:last-child { margin-bottom: 0; }
+    .ic-label {
+        font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+        letter-spacing: 0.8px; color: var(--co-muted); width: 100px; flex-shrink: 0; padding-top: 1px;
+    }
+    .ic-value { font-size: 14px; color: var(--co-ink); }
+    .ic-value strong { color: var(--co-primary); }
+
+    .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary-co {
+        background: var(--co-coral); color: #fff; border: none; border-radius: var(--r-sm);
+        padding: 11px 22px; font-size: 14px; font-weight: 600; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s, transform 0.15s;
+    }
+    .btn-primary-co:hover { background: #e8593b; color: #fff; transform: translateY(-1px); }
+    .btn-outline-co {
+        background: transparent; color: var(--co-primary); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); padding: 11px 22px; font-size: 14px; font-weight: 500;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: border-color 0.15s;
+    }
+    .btn-outline-co:hover { border-color: var(--co-primary); }
+
+    .next-steps {
+        border: 1px solid var(--co-hairline); border-radius: var(--r-sm);
+        padding: 16px 20px; margin-top: 28px; text-align: left;
+    }
+    .next-steps-label {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--co-muted); margin-bottom: 12px; display: block;
+    }
+    .next-step-item {
+        display: flex; align-items: flex-start; gap: 10px;
+        font-size: 13px; color: var(--co-body-muted); margin-bottom: 8px;
+    }
+    .next-step-item:last-child { margin-bottom: 0; }
+    .next-step-item i { color: var(--co-deep-green); font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-wrap">
+    <div class="success-icon-ring"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+    <h1 class="success-title">Order Dibuat dengan Kredit</h1>
+    <p class="success-sub">Pesanan kamu langsung dikonfirmasi dan akan diproses supplier. Tagihan kredit sudah dibuat — bayar sebelum jatuh tempo.</p>
+    <div class="order-num-pill">{{ order.order_number }}</div>
+
+    <!-- Jatuh tempo (penegasan) -->
+    <div class="due-banner">
+        <span class="ic"><i class="fa-solid fa-calendar-check"></i></span>
+        <div>
+            <span class="lbl">Jatuh Tempo Tagihan</span>
+            <span class="val">{{ invoice.due_date|date:'d M Y' }}</span>
+            <div class="sub">
+                NET {{ credit.payment_term_days }} ·
+                {% if days_left > 0 %}{{ days_left }} hari lagi{% elif days_left == 0 %}hari ini{% else %}sudah lewat{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="ic-label">Order</span>
+            <span class="ic-value"><strong>{{ order.order_number }}</strong></span>
+        </div>
+        <div class="info-card-row">
+            <span class="ic-label">Tagihan</span>
+            <span class="ic-value"><strong>Rp {{ invoice.amount|floatformat:0 }}</strong></span>
+        </div>
+        <div class="info-card-row">
+            <span class="ic-label">Sisa Kredit</span>
+            <span class="ic-value">Rp {{ credit.available_credit|floatformat:0 }}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="ic-label">Tujuan</span>
+            <span class="ic-value">{{ order.shipping_address }}</span>
+        </div>
+    </div>
+
+    <div class="cta-row">
+        <a href="/cafe/invoices/" class="btn-primary-co">
+            <i class="fa-solid fa-file-invoice" style="font-size:12px;"></i>Lihat Tagihan Kredit
+        </a>
+        <a href="/orders/{{ order.order_number }}/" class="btn-outline-co">
+            <i class="fa-solid fa-box" style="font-size:12px;"></i>Detail Order
+        </a>
+    </div>
+
+    <div class="next-steps">
+        <span class="next-steps-label">Langkah Selanjutnya</span>
+        <div class="next-step-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Supplier akan memproses pesanan kamu dalam 1×24 jam kerja.</span>
+        </div>
+        <div class="next-step-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Lunasi tagihan sebelum <strong>{{ invoice.due_date|date:'d M Y' }}</strong> — via Bayar Online atau transfer manual di halaman Tagihan.</span>
+        </div>
+        <div class="next-step-item">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Pantau semua tagihan & sisa kredit di <a href="/cafe/invoices/" style="color:var(--co-primary);">Tagihan Kredit</a>.</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

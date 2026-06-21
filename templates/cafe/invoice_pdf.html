@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<style>
+@page {
+    size: A4;
+    margin: 2.4cm 2.8cm;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    color: #111;
+    background: #fff;
+    line-height: 1.55;
+}
+
+.h-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: -0.5px;
+}
+.h-brand {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111;
+    text-align: right;
+    letter-spacing: -0.5px;
+}
+
+.meta-label { color: #888; font-size: 10.5px; }
+.meta-value { color: #111; font-size: 10.5px; }
+
+.addr-company { font-weight: 700; font-size: 11px; color: #111; margin-bottom: 2px; }
+.addr-line    { font-size: 10.5px; color: #444; line-height: 1.65; }
+.section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
+}
+
+.amount-due {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: -0.5px;
+}
+.due-date-line {
+    font-size: 11px;
+    color: #555;
+    margin-top: 2px;
+}
+
+.tbl-layout { width: 100%; border-collapse: collapse; }
+.tbl-layout td { border: none; padding: 0; background: transparent; vertical-align: top; }
+
+.items-tbl { width: 100%; border-collapse: collapse; }
+.items-tbl thead tr { border-bottom: 1.5px solid #111; }
+.items-tbl thead th {
+    font-size: 10px;
+    font-weight: 700;
+    color: #555;
+    padding: 0 0 8px 0;
+    text-align: left;
+    background: transparent;
+}
+.items-tbl thead th.r { text-align: right; }
+.items-tbl tbody td {
+    padding: 10px 0;
+    font-size: 10.5px;
+    color: #333;
+    border-bottom: 1px solid #e8e8e8;
+    vertical-align: top;
+    background: transparent;
+}
+.items-tbl tbody td.r { text-align: right; }
+.items-tbl tbody td.name { font-weight: 600; color: #111; }
+
+.totals-tbl { width: 100%; border-collapse: collapse; }
+.totals-tbl td {
+    padding: 5px 0;
+    font-size: 10.5px;
+    border: none;
+    background: transparent;
+}
+.totals-tbl td.tl { color: #555; }
+.totals-tbl td.tv { text-align: right; color: #111; font-weight: 500; }
+.totals-tbl tr.grand td {
+    border-top: 1.5px solid #111;
+    padding-top: 8px;
+    font-weight: 900;
+    font-size: 11.5px;
+    color: #111;
+}
+
+.hr { border: none; border-top: 1px solid #ddd; }
+.footer-text { font-size: 9px; color: #aaa; text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<table class="tbl-layout" style="margin-bottom: 24px;">
+    <tr>
+        <td width="60%">
+            <div class="h-title">Invoice</div>
+        </td>
+        <td width="40%" style="text-align:right; vertical-align:top;">
+            <div class="h-brand">SupKopi</div>
+        </td>
+    </tr>
+</table>
+
+<!-- META -->
+<table class="tbl-layout" style="margin-bottom: 28px;">
+    <tr>
+        <td width="50%">
+            <table class="tbl-layout">
+                <tr>
+                    <td style="padding-bottom:3px;">
+                        <span class="meta-label">Nomor invoice&nbsp;&nbsp;</span>
+                        <span class="meta-value">{{ invoice.order.order_number }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-bottom:3px;">
+                        <span class="meta-label">Tanggal terbit&nbsp;&nbsp;</span>
+                        <span class="meta-value">{{ invoice.created_at|date:"d F Y" }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="meta-label">Jatuh tempo&nbsp;&nbsp;</span>
+                        <span class="meta-value">{{ invoice.due_date|date:"d F Y" }}</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- ADDRESSES -->
+<table class="tbl-layout" style="margin-bottom: 32px;">
+    <tr>
+        <td width="48%" style="padding-right: 24px;">
+            <div class="addr-company">Sup Kopi</div>
+            <div class="addr-line">
+                Platform Pengadaan Bahan Kafe<br>
+                support@supkopi.id
+            </div>
+        </td>
+        <td width="52%">
+            <div class="section-label">Bill to</div>
+            <div class="addr-company">{{ invoice.credit_account.cafe.cafe_profile.cafe_name }}</div>
+            <div class="addr-detail">
+                {{ invoice.order.shipping_address }}<br>
+                {{ invoice.credit_account.cafe.email }}
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- AMOUNT DUE -->
+<div style="margin-bottom: 28px;">
+    <div class="amount-due">Rp {{ invoice.amount|floatformat:0 }}
+        {% if invoice.status == 'PAID' %}
+        <span style="font-size:14px; font-weight:400; color:#059669;"> · Lunas</span>
+        {% elif invoice.status == 'OVERDUE' %}
+        <span style="font-size:14px; font-weight:400; color:#e11d48;"> · Jatuh Tempo</span>
+        {% else %}
+        <span style="font-size:14px; font-weight:400; color:#555;"> jatuh tempo {{ invoice.due_date|date:"d F Y" }}</span>
+        {% endif %}
+    </div>
+    {% if invoice.paid_at %}
+    <div class="due-date-line">Dilunasi pada {{ invoice.paid_at|date:"d F Y" }} · {{ invoice.get_payment_method_display }}</div>
+    {% endif %}
+</div>
+
+<hr class="hr" style="margin-bottom: 20px;">
+
+<!-- ITEMS -->
+<table class="items-tbl" style="margin-bottom: 24px;">
+    <thead>
+        <tr>
+            <th style="width:50%;">Deskripsi</th>
+            <th class="r" style="width:12%;">Qty</th>
+            <th class="r" style="width:15%;">Satuan</th>
+            <th class="r" style="width:23%;">Jumlah</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in invoice.order.items.all %}
+        <tr>
+            <td class="name">{{ item.product_name }}</td>
+            <td class="r">{{ item.quantity }} {{ item.product_unit }}</td>
+            <td class="r">Rp {{ item.unit_price|floatformat:0 }}</td>
+            <td class="r">Rp {{ item.subtotal|floatformat:0 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- TOTALS -->
+<table class="tbl-layout" style="margin-bottom: 36px;">
+    <tr>
+        <td width="55%"></td>
+        <td width="45%">
+            <table class="totals-tbl">
+                <tr>
+                    <td class="tl">Subtotal</td>
+                    <td class="tv">Rp {{ invoice.order.subtotal|floatformat:0 }}</td>
+                </tr>
+                <tr>
+                    <td class="tl">Ongkos kirim</td>
+                    <td class="tv">Rp {{ invoice.order.shipping_cost|floatformat:0 }}</td>
+                </tr>
+                <tr>
+                    <td class="tl">Total</td>
+                    <td class="tv">Rp {{ invoice.amount|floatformat:0 }}</td>
+                </tr>
+                <tr class="grand">
+                    <td class="tl">Tagihan</td>
+                    <td class="tv">Rp {{ invoice.amount|floatformat:0 }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- FOOTER -->
+<hr class="hr" style="margin-bottom: 10px;">
+<div class="footer-text">Halaman 1 dari 1</div>
+
+</body>
+</html>

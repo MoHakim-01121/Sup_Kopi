@@ -4,68 +4,139 @@
 
 {% block page_css %}
 <style>
-    /* Payment card */
-    .payment-card {
-        background: var(--co-canvas);
-        border: 1px solid var(--co-hairline);
-        border-radius: var(--r-sm); overflow: hidden;
-        max-width: 520px; margin: 0 auto;
+    /* ── Layout 2 kolom ─────────────────────────────────── */
+    .pay-layout{
+        display:grid;grid-template-columns:minmax(0,1fr) 380px;
+        gap:24px;align-items:start;
     }
-    .payment-card-header {
-        padding: 20px 24px; border-bottom: 1px solid var(--co-hairline);
-        display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    }
-    .payment-card-header .order-label {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 15px; font-weight: 600; color: var(--co-primary);
-    }
-    .order-num-badge {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px; background: var(--co-stone);
-        border: 1px solid var(--co-hairline);
-        border-radius: var(--r-xs); padding: 4px 10px;
-        color: var(--co-ink);
-    }
-    .payment-card-body { padding: 24px; }
+    @media(max-width:860px){.pay-layout{grid-template-columns:1fr;}}
 
-    .price-total {
-        display: flex; justify-content: space-between; align-items: baseline;
-        margin-bottom: 28px;
+    /* ── Kartu generik ──────────────────────────────────── */
+    .pay-card{
+        background:var(--co-canvas);
+        border:1px solid var(--co-hairline);
+        border-radius:var(--r-md);overflow:hidden;margin-bottom:16px;
     }
-    .price-total .label { font-size: 15px; font-weight: 600; color: var(--co-primary); }
-    .price-total .value {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.5rem; font-weight: 600; color: var(--co-primary);
+    .pay-card-head{
+        padding:14px 20px;border-bottom:1px solid var(--co-hairline);
+        display:flex;align-items:center;gap:10px;
+    }
+    .pay-card-head .ico{
+        width:26px;height:26px;border-radius:var(--r-xs);
+        background:var(--co-pale-green);color:var(--co-deep-green);
+        display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;
+    }
+    .pay-card-head .ttl{
+        font-family:'Space Grotesk',sans-serif;
+        font-size:14px;font-weight:600;color:var(--co-primary);
+    }
+    .pay-card-body{padding:18px 20px;}
+
+    /* ── Countdown banner ───────────────────────────────── */
+    .pay-countdown{
+        display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+        background:var(--co-amber-bg);border:1px solid var(--co-amber-border);
+        border-radius:var(--r-md);padding:14px 18px;margin-bottom:16px;
+    }
+    .pay-countdown i{color:var(--co-amber-dim);font-size:16px;}
+    .pay-countdown-text{font-size:13px;color:var(--co-amber-text);}
+    .pay-countdown-text b{color:var(--co-amber-dim);}
+    .pay-countdown-clock{
+        font-family:'JetBrains Mono',monospace;font-weight:500;
+        font-size:15px;color:#fff;background:var(--co-amber-dim);
+        padding:4px 10px;border-radius:var(--r-xs);margin-left:auto;letter-spacing:.5px;
+    }
+    .pay-countdown.expired{background:var(--co-error-bg);border-color:var(--co-error-border);}
+    .pay-countdown.expired i,.pay-countdown.expired .pay-countdown-text b{color:var(--co-error);}
+    .pay-countdown.expired .pay-countdown-text{color:var(--co-error);}
+    .pay-countdown.expired .pay-countdown-clock{background:var(--co-error);}
+
+    /* ── Alamat pengiriman ──────────────────────────────── */
+    .pay-ship-name{font-size:13px;font-weight:600;color:var(--co-primary);margin-bottom:4px;}
+    .pay-ship-addr{font-size:13px;color:var(--co-body-muted);line-height:1.6;white-space:pre-line;}
+
+    /* ── Daftar produk ──────────────────────────────────── */
+    .pay-item{
+        display:flex;gap:14px;padding:14px 0;
+        border-bottom:1px solid var(--co-hairline);
+    }
+    .pay-item:first-child{padding-top:0;}
+    .pay-item:last-child{border-bottom:none;padding-bottom:0;}
+    .pay-item-img{
+        width:56px;height:56px;flex-shrink:0;
+        border:1px solid var(--co-hairline);border-radius:var(--r-sm);
+        overflow:hidden;background:var(--co-stone);
+        display:flex;align-items:center;justify-content:center;
+    }
+    .pay-item-img img{width:100%;height:100%;object-fit:cover;}
+    .pay-item-img .ph{color:var(--co-muted);opacity:.4;font-size:18px;}
+    .pay-item-info{flex:1;min-width:0;}
+    .pay-item-name{
+        font-size:13px;font-weight:600;color:var(--co-primary);
+        margin-bottom:4px;line-height:1.35;
+    }
+    .pay-item-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--co-muted);}
+    .pay-item-sub{
+        font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;
+        color:var(--co-primary);text-align:right;white-space:nowrap;align-self:center;
     }
 
-    .btn-pay {
-        display: block; width: 100%;
-        background: var(--co-primary); color: #fff;
-        border: none; border-radius: var(--r-sm);
-        padding: 14px; font-size: 15px; font-weight: 500;
-        cursor: pointer; transition: background 0.15s;
-        display: flex; align-items: center; justify-content: center; gap: 10px;
+    /* ── Metode pembayaran ──────────────────────────────── */
+    .pay-method-group{margin-bottom:16px;}
+    .pay-method-group:last-child{margin-bottom:0;}
+    .pay-method-label{
+        font-family:'JetBrains Mono',monospace;font-size:10px;
+        text-transform:uppercase;letter-spacing:1px;color:var(--co-muted);
+        display:flex;align-items:center;gap:7px;margin-bottom:10px;
     }
-    .btn-pay:hover { background: var(--co-primary-hover); }
+    .pay-method-chips{display:flex;flex-wrap:wrap;gap:8px;}
+    .pay-chip{
+        display:inline-flex;align-items:center;gap:6px;
+        border:1px solid var(--co-hairline);border-radius:var(--r-sm);
+        padding:7px 12px;font-size:12px;font-weight:600;color:var(--co-ink);
+        background:var(--co-canvas);
+    }
+    .pay-chip i{font-size:12px;color:var(--co-slate);}
 
-    /* Trust badges */
-    .trust-strip {
-        display: flex; align-items: center; justify-content: center;
-        gap: 20px; margin-top: 16px; padding-top: 16px;
-        border-top: 1px solid var(--co-hairline);
+    /* ── Ringkasan harga (aside) ────────────────────────── */
+    .pay-aside{position:sticky;top:88px;}
+    .price-line{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:13px;}
+    .price-line .lbl{color:var(--co-muted);}
+    .price-line .val{color:var(--co-ink);font-weight:500;}
+    .pay-total{
+        display:flex;justify-content:space-between;align-items:baseline;
+        padding-top:14px;margin-top:14px;border-top:1px solid var(--co-hairline);
     }
-    .trust-badge {
-        display: flex; align-items: center; gap: 6px;
-        font-size: 12px; color: var(--co-muted);
+    .pay-total .lbl{font-size:14px;font-weight:600;color:var(--co-primary);}
+    .pay-total .val{
+        font-family:'Space Grotesk',sans-serif;
+        font-size:1.5rem;font-weight:600;color:var(--co-primary);letter-spacing:-.02em;
     }
-    .trust-badge i { color: var(--co-deep-green); font-size: 12px; }
 
-    .btn-back-link {
-        display: block; text-align: center; margin-top: 12px;
-        font-size: 13px; color: var(--co-muted); text-decoration: none;
-        transition: color 0.15s;
+    .btn-pay{
+        display:flex;align-items:center;justify-content:center;gap:10px;
+        width:100%;background:var(--co-coral);color:#fff;border:none;
+        border-radius:var(--r-sm);padding:14px;font-size:15px;font-weight:600;
+        cursor:pointer;margin-top:18px;
+        transition:background .15s,transform .12s,box-shadow .15s;
     }
-    .btn-back-link:hover { color: var(--co-primary); }
+    .btn-pay:hover{background:#e8593b;transform:translateY(-1px);box-shadow:0 10px 24px rgba(255,119,89,.28);}
+    .btn-pay:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+
+    .pay-hint{text-align:center;font-size:12px;color:var(--co-muted);margin:12px 0 0;}
+
+    .trust-strip{
+        display:flex;align-items:center;justify-content:center;gap:18px;
+        margin-top:16px;padding-top:16px;border-top:1px solid var(--co-hairline);flex-wrap:wrap;
+    }
+    .trust-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--co-muted);}
+    .trust-badge i{color:var(--co-deep-green);font-size:11px;}
+
+    .btn-back-link{
+        display:block;text-align:center;margin-top:14px;
+        font-size:13px;color:var(--co-muted);text-decoration:none;transition:color .15s;
+    }
+    .btn-back-link:hover{color:var(--co-primary);}
 </style>
 {% endblock %}
 
@@ -92,50 +163,151 @@
 <span class="page-eyebrow">Checkout</span>
 <h1 class="page-title">Pembayaran</h1>
 
-<div class="payment-card">
-    <div class="payment-card-header">
-        <span class="order-label">Detail Pembayaran</span>
-        <span class="order-num-badge">{{ order.order_number }}</span>
+<!-- Countdown -->
+<div class="pay-countdown" id="payCountdown" data-deadline="{{ payment_deadline|date:'c' }}">
+    <i class="fa-solid fa-clock"></i>
+    <div class="pay-countdown-text">
+        Selesaikan pembayaran sebelum
+        <b>{{ payment_deadline|date:'d M Y, H:i' }}</b>
     </div>
-    <div class="payment-card-body">
-        <div class="price-row">
-            <span class="label">Subtotal produk</span>
-            <span class="value">Rp {{ order.subtotal|floatformat:0 }}</span>
-        </div>
-        <div class="price-row">
-            <span class="label">Ongkos kirim</span>
-            <span class="value">Rp {{ order.shipping_cost|floatformat:0 }}</span>
-        </div>
-        <hr class="price-divider">
-        <div class="price-total">
-            <span class="label">Total Pembayaran</span>
-            <span class="value">Rp {{ order.total_amount|floatformat:0 }}</span>
-        </div>
+    <span class="pay-countdown-clock" id="payClock">--:--:--</span>
+</div>
 
-        <button id="pay-button" class="btn-pay">
-            <i class="fa-solid fa-lock" style="font-size:13px;"></i>
-            Bayar Sekarang
-        </button>
+<div class="pay-layout">
 
-        <div class="trust-strip">
-            <div class="trust-badge">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span>SSL Secured</span>
+    <!-- ════════ KIRI: detail ════════ -->
+    <div class="pay-main">
+
+        <!-- Alamat pengiriman -->
+        <div class="pay-card">
+            <div class="pay-card-head">
+                <span class="ico"><i class="fa-solid fa-location-dot"></i></span>
+                <span class="ttl">Alamat Pengiriman</span>
             </div>
-            <div class="trust-badge">
-                <i class="fa-solid fa-credit-card"></i>
-                <span>via Midtrans</span>
-            </div>
-            <div class="trust-badge">
-                <i class="fa-solid fa-rotate-left"></i>
-                <span>Mudah refund</span>
+            <div class="pay-card-body">
+                <div class="pay-ship-name">
+                    {% if order.cafe.cafe_profile.cafe_name %}{{ order.cafe.cafe_profile.cafe_name }}{% else %}{{ order.cafe.username }}{% endif %}
+                </div>
+                <div class="pay-ship-addr">{{ order.shipping_address }}</div>
             </div>
         </div>
 
-        <a href="/orders/{{ order.order_number }}/" class="btn-back-link">
-            <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i>Kembali ke Detail Order
-        </a>
+        <!-- Produk dipesan -->
+        <div class="pay-card">
+            <div class="pay-card-head">
+                <span class="ico"><i class="fa-solid fa-box-open"></i></span>
+                <span class="ttl">Produk Dipesan</span>
+            </div>
+            <div class="pay-card-body">
+                {% for item in order_items %}
+                <div class="pay-item">
+                    <div class="pay-item-img">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}">
+                        {% else %}
+                            <span class="ph"><i class="fa-solid fa-mug-hot"></i></span>
+                        {% endif %}
+                    </div>
+                    <div class="pay-item-info">
+                        <div class="pay-item-name">{{ item.product_name }}</div>
+                        <div class="pay-item-meta">{{ item.quantity }} {{ item.product_unit }} × Rp {{ item.unit_price|floatformat:0 }}</div>
+                    </div>
+                    <div class="pay-item-sub">Rp {{ item.subtotal|floatformat:0 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Metode pembayaran -->
+        <div class="pay-card">
+            <div class="pay-card-head">
+                <span class="ico"><i class="fa-solid fa-credit-card"></i></span>
+                <span class="ttl">Metode Pembayaran Tersedia</span>
+            </div>
+            <div class="pay-card-body">
+                <div class="pay-method-group">
+                    <div class="pay-method-label"><i class="fa-solid fa-building-columns"></i> Transfer Bank (Virtual Account)</div>
+                    <div class="pay-method-chips">
+                        <span class="pay-chip">BCA</span>
+                        <span class="pay-chip">BNI</span>
+                        <span class="pay-chip">BRI</span>
+                        <span class="pay-chip">Mandiri</span>
+                        <span class="pay-chip">Permata</span>
+                    </div>
+                </div>
+                <div class="pay-method-group">
+                    <div class="pay-method-label"><i class="fa-solid fa-wallet"></i> E-Wallet & QRIS</div>
+                    <div class="pay-method-chips">
+                        <span class="pay-chip">GoPay</span>
+                        <span class="pay-chip">ShopeePay</span>
+                        <span class="pay-chip"><i class="fa-solid fa-qrcode"></i> QRIS</span>
+                    </div>
+                </div>
+                <div class="pay-method-group">
+                    <div class="pay-method-label"><i class="fa-solid fa-credit-card"></i> Kartu Kredit / Debit</div>
+                    <div class="pay-method-chips">
+                        <span class="pay-chip"><i class="fa-brands fa-cc-visa"></i> Visa</span>
+                        <span class="pay-chip"><i class="fa-brands fa-cc-mastercard"></i> Mastercard</span>
+                        <span class="pay-chip">JCB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <!-- ════════ KANAN: ringkasan + bayar ════════ -->
+    <div class="pay-aside">
+        <div class="pay-card">
+            <div class="pay-card-head">
+                <span class="ico"><i class="fa-solid fa-receipt"></i></span>
+                <span class="ttl">Ringkasan Pembayaran</span>
+            </div>
+            <div class="pay-card-body">
+                <div class="price-line">
+                    <span class="lbl">No. Pesanan</span>
+                    <span class="val" style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ order.order_number }}</span>
+                </div>
+                <div class="price-line">
+                    <span class="lbl">Subtotal produk</span>
+                    <span class="val">Rp {{ order.subtotal|floatformat:0 }}</span>
+                </div>
+                <div class="price-line">
+                    <span class="lbl">Ongkos kirim</span>
+                    <span class="val">Rp {{ order.shipping_cost|floatformat:0 }}</span>
+                </div>
+                <div class="pay-total">
+                    <span class="lbl">Total Pembayaran</span>
+                    <span class="val">Rp {{ order.total_amount|floatformat:0 }}</span>
+                </div>
+
+                <button id="pay-button" class="btn-pay">
+                    <i class="fa-solid fa-lock" style="font-size:13px;"></i>
+                    Bayar Sekarang
+                </button>
+                <p id="pay-hint" class="pay-hint">
+                    <i class="fa-solid fa-circle-notch fa-spin me-1"></i>
+                    Membuka halaman pembayaran...
+                </p>
+
+                <p style="text-align:center;font-size:11.5px;color:var(--co-muted);margin:14px 0 0;line-height:1.55;">
+                    <i class="fa-solid fa-circle-info" style="font-size:10px;"></i>
+                    Order kamu sudah tersimpan. Kamu bisa menyelesaikan pembayaran kapan saja
+                    sebelum batas waktu lewat menu <b>Riwayat Order</b>.
+                </p>
+
+                <div class="trust-strip">
+                    <div class="trust-badge"><i class="fa-solid fa-shield-halved"></i><span>SSL Secured</span></div>
+                    <div class="trust-badge"><i class="fa-solid fa-credit-card"></i><span>via Midtrans</span></div>
+                </div>
+
+                <a href="/orders/{{ order.order_number }}/" class="btn-back-link">
+                    <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i>Kembali ke Detail Order
+                </a>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}
@@ -147,21 +319,90 @@
 <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ client_key }}"></script>
 {% endif %}
 <script>
-    document.getElementById('pay-button').addEventListener('click', function () {
-        snap.pay('{{ payment.snap_token }}', {
-            onSuccess: function (result) {
-                window.location.href = '/payments/success/{{ order.order_number }}/';
-            },
-            onPending: function (result) {
-                window.location.href = '/orders/{{ order.order_number }}/';
-            },
-            onError: function (result) {
-                if (window.showToast) {
-                    window.showToast('Pembayaran gagal. Silakan coba lagi.', 'error');
+    (function () {
+        var btn  = document.getElementById('pay-button');
+        var hint = document.getElementById('pay-hint');
+        var cd   = document.getElementById('payCountdown');
+        var deadline = cd ? new Date(cd.dataset.deadline).getTime() : NaN;
+        var expired  = !isNaN(deadline) && (deadline - Date.now() <= 0);
+
+        function setHint(html) { if (hint) hint.innerHTML = html; }
+
+        // Batas waktu sudah lewat → jangan auto-buka Snap (token kemungkinan mati).
+        if (expired) {
+            btn.disabled = true;
+            setHint('Batas waktu pembayaran telah berakhir. Silakan buat order baru atau hubungi supplier.');
+            return;
+        }
+
+        function snapReady() { return typeof snap !== 'undefined' && snap && typeof snap.pay === 'function'; }
+
+        function pay() {
+            if (!snapReady()) {
+                setHint('Gagal memuat halaman pembayaran. Periksa koneksi lalu klik &ldquo;Bayar Sekarang&rdquo;.');
+                return;
+            }
+            setHint('<i class="fa-solid fa-circle-notch fa-spin me-1"></i> Membuka halaman pembayaran...');
+            snap.pay('{{ payment.snap_token }}', {
+                onSuccess: function () {
+                    window.location.href = '/payments/success/{{ order.order_number }}/';
+                },
+                onPending: function () {
+                    window.location.href = '/orders/{{ order.order_number }}/';
+                },
+                onError: function () {
+                    setHint('Pembayaran gagal. Klik &ldquo;Bayar Sekarang&rdquo; untuk mencoba lagi.');
+                    if (window.showToast) {
+                        window.showToast('Pembayaran gagal. Silakan coba lagi.', 'error');
+                    }
+                },
+                onClose: function () {
+                    setHint('Pembayaran dibatalkan. Order kamu tersimpan — klik &ldquo;Bayar Sekarang&rdquo; untuk lanjut, atau bayar nanti dari Riwayat Order sebelum batas waktu.');
                 }
-            },
-            onClose: function () {}
-        });
-    });
+            });
+        }
+
+        btn.addEventListener('click', pay);
+
+        // Auto-buka popup begitu Snap siap — user tak perlu klik lagi.
+        // Jika snap.js gagal dimuat, beri pesan fallback alih-alih spinner selamanya.
+        if (snapReady()) {
+            pay();
+        } else {
+            window.addEventListener('load', function () {
+                setTimeout(function () {
+                    if (snapReady()) { pay(); }
+                    else { setHint('Gagal memuat halaman pembayaran. Periksa koneksi lalu klik &ldquo;Bayar Sekarang&rdquo;.'); }
+                }, 1500);
+            });
+        }
+    })();
+
+    /* Countdown timer */
+    (function () {
+        var el    = document.getElementById('payCountdown');
+        var clock = document.getElementById('payClock');
+        if (!el || !clock) return;
+        var deadline = new Date(el.dataset.deadline).getTime();
+        if (isNaN(deadline)) { el.style.display = 'none'; return; }
+
+        function pad(n){ return n < 10 ? '0' + n : '' + n; }
+        function tick() {
+            var diff = deadline - Date.now();
+            if (diff <= 0) {
+                clock.textContent = '00:00:00';
+                el.classList.add('expired');
+                el.querySelector('.pay-countdown-text').innerHTML = '<b>Batas waktu pembayaran telah berakhir.</b>';
+                clearInterval(timer);
+                return;
+            }
+            var h = Math.floor(diff / 3600000);
+            var m = Math.floor((diff % 3600000) / 60000);
+            var s = Math.floor((diff % 60000) / 1000);
+            clock.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+        }
+        tick();
+        var timer = setInterval(tick, 1000);
+    })();
 </script>
 {% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base_supplier.html' %}
+{% block title %}Verifikasi Bukti — Sup Kopi{% endblock %}
+{% block page_title %}Verifikasi Bukti Transfer{% endblock %}
+
+{% block extra_css %}
+<style>
+.iv-layout{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:14px;align-items:start;}
+@media(max-width:900px){.iv-layout{grid-template-columns:1fr;}}
+.iv-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--co-hairline);}
+.iv-row:last-child{border-bottom:none;}
+.iv-row span.k{color:var(--co-muted);white-space:nowrap;}
+.iv-row .v{text-align:right;color:var(--co-ink);font-weight:500;}
+.iv-field label{display:block;font-size:12px;font-weight:600;color:var(--co-muted);margin-bottom:6px;}
+.btn-reject{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--co-error-bg);color:var(--co-error);border:1px solid var(--co-error-border);border-radius:var(--r-sm);padding:11px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+.btn-reject:hover{background:#ffe3e0;}
+.iv-divider{border:none;border-top:1px solid var(--co-hairline);margin:16px 0;}
+.iv-proof img{max-width:100%;border-radius:var(--r-sm);border:1px solid var(--co-hairline);display:block;}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:18px;">
+    <a href="/supplier/credits/{{ invoice.credit_account.cafe_id }}/" class="sd-detail-link"><i class="fa-solid fa-arrow-left" style="font-size:10px;"></i> Kembali</a>
+</div>
+
+<div class="sd-intro">
+    <div>
+        <span class="ey">Keuangan</span>
+        <h1>Verifikasi Invoice {{ invoice.order.order_number }}</h1>
+        <p class="sub">Periksa bukti transfer lalu konfirmasi atau tolak.</p>
+    </div>
+</div>
+
+<div class="iv-layout">
+    <div>
+        <!-- Detail -->
+        <div class="sd-card sd-mb">
+            <div class="sd-card-head"><span class="h-ttl">Detail Invoice</span></div>
+            <div class="sd-card-body">
+                <div class="iv-row"><span class="k">Kafe</span><span class="v">{{ invoice.credit_account.cafe.cafe_profile.cafe_name }}</span></div>
+                <div class="iv-row"><span class="k">No. Order</span><span class="v sd-mono">{{ invoice.order.order_number }}</span></div>
+                <div class="iv-row"><span class="k">Jumlah Tagihan</span><span class="v"><span class="sd-amount" style="font-size:1.05rem;">Rp {{ invoice.amount|floatformat:0 }}</span></span></div>
+                <div class="iv-row"><span class="k">Jatuh Tempo</span><span class="v">{{ invoice.due_date|date:'d M Y' }}</span></div>
+                <div class="iv-row"><span class="k">Upload Bukti</span><span class="v sd-muted">{{ invoice.proof_uploaded_at|date:"d M Y H:i" }}</span></div>
+                {% if invoice.proof_note %}
+                <div class="iv-row"><span class="k">Catatan Kafe</span><span class="v" style="max-width:60%;font-weight:400;">{{ invoice.proof_note }}</span></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Aksi -->
+        <div class="sd-card">
+            <div class="sd-card-head"><span class="h-ttl">Tindakan</span></div>
+            <div class="sd-card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="confirm"
+                            class="sd-seeall solid" style="width:100%;justify-content:center;"
+                            onclick="return confirm('Konfirmasi pelunasan invoice ini?')">
+                        <i class="fa-solid fa-check" style="font-size:11px;"></i> Konfirmasi Lunas
+                    </button>
+
+                    <hr class="iv-divider">
+
+                    <div class="iv-field" style="margin-bottom:12px;">
+                        <label>Alasan Penolakan</label>
+                        <textarea name="reason" class="form-control" rows="3"
+                                  placeholder="Contoh: Jumlah tidak sesuai, bukti tidak terbaca..."></textarea>
+                    </div>
+                    <button type="submit" name="action" value="reject" class="btn-reject">
+                        <i class="fa-solid fa-xmark"></i> Tolak Bukti
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bukti -->
+    <div class="sd-card">
+        <div class="sd-card-head"><span class="h-ttl">Bukti Transfer</span></div>
+        <div class="sd-card-body iv-proof">
+            {% if invoice.proof_image %}
+            <img src="{{ invoice.proof_image.url }}" alt="Bukti Transfer">
+            {% else %}
+            <div class="sd-empty"><i class="fa-solid fa-image"></i>Tidak ada gambar.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

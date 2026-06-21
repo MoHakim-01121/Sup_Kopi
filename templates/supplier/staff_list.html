@@ -1,85 +1,84 @@
 {% extends 'base_supplier.html' %}
 
-{% block title %}Kelola Staff – Sup Kopi{% endblock %}
+{% block title %}Kelola Staff — Sup Kopi{% endblock %}
 {% block page_title %}Kelola Staff{% endblock %}
 
 {% block content %}
 
-<div class="section-card">
-    <div class="section-header">
-        <h5 class="section-title">Anggota Tim</h5>
-        <a href="/supplier/staff/invite/" class="btn btn-sm btn-primary">
-            <i class="fa-solid fa-user-plus me-1" style="font-size:11px;"></i> Tambah Staff
-        </a>
+<!-- Intro -->
+<div class="sd-intro">
+    <div>
+        <span class="ey">Tim</span>
+        <h1>Kelola Staff</h1>
+        <p class="sub">Atur anggota tim, peran, dan akses panel supplier.</p>
     </div>
-    <div class="section-table">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Ditambahkan</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for s in staff %}
-                    <tr>
-                        <td style="font-size:13px; font-weight:600; color:var(--co-ink);">
-                            {{ s.user.username }}
-                        </td>
-                        <td style="font-size:12px; color:var(--co-muted);">{{ s.user.email|default:"–" }}</td>
-                        <td>
-                            <span class="badge {% if s.is_admin %}badge-confirmed{% else %}badge-processing{% endif %}">
-                                {{ s.get_role_display }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if s.is_active %}
-                                <span class="badge badge-delivered">Aktif</span>
-                            {% else %}
-                                <span class="badge badge-cancelled">Nonaktif</span>
-                            {% endif %}
-                        </td>
-                        <td style="font-size:12px; color:var(--co-muted);">
-                            {{ s.created_at|date:"d M Y" }}
-                        </td>
-                        <td>
-                            <div class="d-flex gap-2 align-items-center">
-                                <!-- Ganti role -->
-                                <form method="post" action="/supplier/staff/{{ s.id }}/role/" class="d-flex gap-1">
-                                    {% csrf_token %}
-                                    <select name="role" class="form-select form-select-sm" style="font-size:12px; width:auto;"
-                                            onchange="this.form.submit()">
-                                        {% for val, label in s.ROLE_CHOICES %}
-                                        <option value="{{ val }}" {% if s.role == val %}selected{% endif %}>{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </form>
-                                <!-- Toggle aktif/nonaktif -->
-                                <form method="post" action="/supplier/staff/{{ s.id }}/toggle/">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm {% if s.is_active %}btn-outline-secondary{% else %}btn-primary{% endif %}">
-                                        {% if s.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding:48px 0; color:var(--co-muted); font-size:13px;">
-                            <i class="fa-solid fa-users" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:12px;"></i>
+    <a href="/supplier/staff/invite/" class="sd-seeall solid">
+        <i class="fa-solid fa-user-plus" style="font-size:11px;"></i> Tambah Staff
+    </a>
+</div>
+
+<!-- Table -->
+<div class="sd-card">
+    <div class="sd-card-head"><span class="h-ttl">Anggota Tim</span></div>
+    <div class="sd-table-wrap">
+        <table class="sd-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Ditambahkan</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in staff %}
+                <tr>
+                    <td style="font-weight:600;color:var(--co-ink);">{{ s.user.username }}</td>
+                    <td><span class="sd-muted">{{ s.user.email|default:"–" }}</span></td>
+                    <td>
+                        <span class="badge {% if s.is_admin %}badge-confirmed{% else %}badge-processing{% endif %}">{{ s.get_role_display }}</span>
+                    </td>
+                    <td>
+                        {% if s.is_active %}
+                            <span class="badge badge-delivered">Aktif</span>
+                        {% else %}
+                            <span class="badge badge-cancelled">Nonaktif</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="sd-mono sd-muted">{{ s.created_at|date:"d M Y" }}</span></td>
+                    <td>
+                        <div class="d-flex gap-2 align-items-center justify-content-end">
+                            <form method="post" action="/supplier/staff/{{ s.id }}/role/">
+                                {% csrf_token %}
+                                <select name="role" class="form-select form-select-sm" style="font-size:12px;width:auto;" onchange="this.form.submit()">
+                                    {% for val, label in s.ROLE_CHOICES %}
+                                    <option value="{{ val }}" {% if s.role == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                            <form method="post" action="/supplier/staff/{{ s.id }}/toggle/">
+                                {% csrf_token %}
+                                <button type="submit" class="sd-pill {% if not s.is_active %}active{% endif %}" style="border:1px solid var(--co-hairline);">
+                                    {% if s.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="sd-empty">
+                            <i class="fa-solid fa-users"></i>
                             Belum ada staff. <a href="/supplier/staff/invite/" style="color:var(--co-primary);">Tambah sekarang</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 

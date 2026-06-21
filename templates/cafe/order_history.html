@@ -1,226 +1,154 @@
 {% extends 'base_store.html' %}
-
-{% block title %}Riwayat Order — Sup Kopi{% endblock %}
+{% block title %}Pesanan Saya — Sup Kopi{% endblock %}
 
 {% block page_css %}
 <style>
-/* ── Page header ─────────────────────────────── */
-.page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
-.page-title{margin:0;}
-.btn-shop{background:var(--co-primary);color:#fff;border:none;border-radius:var(--r-sm);padding:9px 18px;font-size:13px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:background .15s;}
-.btn-shop:hover{background:var(--co-primary-hover);color:#fff;}
+/* Tabs */
+.po-tabs{display:flex;gap:2px;border-bottom:1px solid var(--co-hairline);margin-bottom:16px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;}
+.po-tabs::-webkit-scrollbar{display:none;}
+.po-tab{font-size:13px;font-weight:500;color:var(--co-muted);text-decoration:none;border-bottom:2px solid transparent;padding:9px 13px;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s;}
+.po-tab:hover{color:var(--co-primary);}
+.po-tab.active{color:var(--co-primary);border-bottom-color:var(--co-coral);}
+.po-tab .c{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--co-muted);margin-left:5px;}
+.po-tab.active .c{color:var(--co-coral);}
 
-/* ── Stats strip ─────────────────────────────── */
-.stats-strip{
-    display:flex;gap:0;
-    border:1px solid var(--co-hairline);
-    border-radius:var(--r-sm);
-    background:var(--co-canvas);
-    overflow:hidden;
-    margin-bottom:20px;
-}
-.stat-cell{
-    flex:1;padding:16px 20px;
-    border-right:1px solid var(--co-hairline);
-}
-.stat-cell:last-child{border-right:none;}
-.stat-val{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:1.5rem;font-weight:400;letter-spacing:-.03em;
-    color:var(--co-primary);display:block;margin-bottom:2px;
-}
-.stat-label{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--co-muted);}
+/* Card */
+.po-list{display:flex;flex-direction:column;gap:8px;}
+.po-card{position:relative;border:1px solid var(--co-hairline);border-radius:var(--r-md);background:var(--co-canvas);box-shadow:0 1px 3px rgba(0,0,0,.05);padding:14px 18px;transition:border-color .18s;}
+.po-card:hover{border-color:var(--co-coral);}
+.po-stretch{position:absolute;inset:0;z-index:1;border-radius:inherit;}
+.po-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.po-id{display:flex;align-items:center;gap:8px;min-width:0;}
+.po-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--co-primary);}
+.po-meta{font-size:12px;color:var(--co-muted);white-space:nowrap;}
+.po-status{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--co-body-muted);white-space:nowrap;}
+.po-chev{font-size:10px;color:var(--co-muted);transition:transform .18s;}
+.po-card:hover .po-chev{transform:translateX(2px);color:var(--co-coral);}
+.po-bot{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:9px;}
+.po-items{font-size:12px;color:var(--co-body-muted);line-height:1.5;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.po-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.po-actions{position:relative;z-index:2;display:flex;align-items:center;gap:7px;}
+.po-actions form{margin:0;display:inline-flex;}
+.po-icon-btn{position:relative;z-index:2;width:30px;height:30px;border-radius:var(--r-sm);border:1px solid var(--co-hairline);background:#fff;color:var(--co-muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;transition:border-color .15s,color .15s;}
+.po-icon-btn:hover{border-color:var(--co-primary);color:var(--co-primary);}
 
+/* Reorder strip */
+.po-reorder{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid var(--co-hairline);border-radius:var(--r-md);background:var(--co-stone);padding:12px 18px;margin-bottom:16px;}
+.po-reorder .pr-eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--co-muted);}
+.po-reorder .pr-items{font-size:12px;color:var(--co-body-muted);margin-top:2px;}
+.po-reorder .pr-items b{color:var(--co-primary);font-weight:600;}
 
-/* ── Order cards ─────────────────────────────── */
-.order-list{display:flex;flex-direction:column;gap:10px;}
-.order-card{
-    border:1px solid var(--co-hairline);
-    border-radius:var(--r-sm);
-    background:var(--co-canvas);
-    overflow:hidden;
-    transition:border-color .15s,box-shadow .15s;
-}
-.order-card:hover{border-color:rgba(50,50,60,.25);box-shadow:0 2px 12px rgba(0,0,0,.06);}
+/* Empty (filter) + pager */
+.po-filter-empty{text-align:center;color:var(--co-muted);font-size:13px;padding:40px 0;}
+.po-pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:20px;}
+.po-page{width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--co-hairline);background:#fff;color:var(--co-primary);display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:13px;transition:border-color .15s,background .15s;}
+.po-page:hover{border-color:var(--co-primary);background:var(--co-stone);}
+.po-page-info{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--co-muted);}
 
-/* Card header */
-.oc-header{
-    display:flex;align-items:center;
-    justify-content:space-between;
-    padding:14px 20px;gap:12px;
-}
-.oc-num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--co-primary);margin-bottom:3px;}
-.oc-meta{font-size:12px;color:var(--co-muted);display:flex;align-items:center;gap:10px;}
-.oc-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--co-muted);display:inline-block;}
-
-/* Items preview */
-.oc-items{
-    padding:9px 20px;
-    border-top:1px solid var(--co-hairline);
-    border-bottom:1px solid var(--co-hairline);
-    background:var(--co-stone);
-    font-size:13px;color:var(--co-body-muted);
-    line-height:1.5;
-}
-.oc-item-sep{color:var(--co-hairline);margin:0 6px;}
-.oc-more{color:var(--co-muted);font-style:italic;}
-
-/* Card footer */
-.oc-footer{
-    display:flex;align-items:center;
-    justify-content:space-between;
-    padding:12px 20px;gap:12px;flex-wrap:wrap;
-}
-.oc-total{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:600;color:var(--co-primary);}
-.oc-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-
-/* Action buttons */
-.btn-pay-now{
-    background:var(--co-primary);color:#fff;
-    border:none;border-radius:var(--r-sm);
-    padding:7px 14px;font-size:12px;font-weight:500;
-    text-decoration:none;display:inline-flex;align-items:center;gap:6px;
-    transition:background .15s;white-space:nowrap;cursor:pointer;
-}
-.btn-pay-now:hover{background:var(--co-primary-hover);color:#fff;}
-.btn-detail{
-    font-size:12px;font-weight:500;color:var(--co-primary);
-    text-decoration:none;border:1px solid var(--co-hairline);
-    border-radius:var(--r-xs);padding:7px 14px;
-    transition:border-color .15s,background .15s;white-space:nowrap;
-    display:inline-flex;align-items:center;gap:5px;
-}
-.btn-detail:hover{border-color:var(--co-primary);background:var(--co-stone);color:var(--co-primary);}
-.btn-reorder{
-    font-size:12px;font-weight:500;color:var(--co-muted);
-    background:none;border:1px solid var(--co-hairline);
-    border-radius:var(--r-xs);padding:7px 14px;cursor:pointer;
-    transition:border-color .15s,color .15s,background .15s;
-    white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
-}
-.btn-reorder:hover{border-color:var(--co-deep-green);color:var(--co-deep-green);background:#edfce9;}
-
-/* ── Empty state ─────────────────────────────── */
-.order-empty{text-align:center;padding:80px 24px;border:1px solid var(--co-hairline);border-radius:var(--r-sm);background:var(--co-canvas);}
-.order-empty i{font-size:2.8rem;color:var(--co-muted);opacity:.22;display:block;margin-bottom:16px;}
-.order-empty h4{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--co-primary);margin-bottom:8px;}
-.order-empty p{color:var(--co-muted);font-size:14px;margin-bottom:24px;}
-.btn-start-shop{display:inline-flex;align-items:center;gap:8px;background:var(--co-primary);color:#fff;border-radius:var(--r-sm);padding:11px 24px;font-size:14px;font-weight:500;text-decoration:none;transition:background .15s;}
-.btn-start-shop:hover{background:var(--co-primary-hover);color:#fff;}
-
-@media(max-width:600px){
-    .stats-strip{flex-direction:column;}
-    .stat-cell{border-right:none;border-bottom:1px solid var(--co-hairline);padding:12px 16px;}
-    .stat-cell:last-child{border-bottom:none;}
-    .oc-header{flex-wrap:wrap;}
-    .oc-footer{flex-direction:column;align-items:flex-start;gap:10px;}
-    .oc-actions{width:100%;}
-    .btn-detail,.btn-pay-now,.btn-reorder{flex:1;justify-content:center;}
+@media(max-width:560px){
+    .po-bot{flex-direction:column;align-items:flex-start;gap:8px;}
+    .po-right{width:100%;justify-content:space-between;}
 }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="acct-layout">
+{% include 'partials/_account_sidebar.html' with active='orders' %}
+<div class="acct-main">
 
-<span class="page-eyebrow">Kafe</span>
-<div class="page-header">
-    <h1 class="page-title">Riwayat Order</h1>
-    <a href="/produk/" class="btn-shop">
-        <i class="fa-solid fa-store" style="font-size:12px;"></i>Belanja Lagi
-    </a>
-</div>
-
-{% if orders %}
-
-<!-- Stats strip -->
-<div class="stats-strip">
-    <div class="stat-cell">
-        <span class="stat-val">{{ orders|length }}</span>
-        <span class="stat-label">Total Order</span>
-    </div>
-    <div class="stat-cell">
-        <span class="stat-val">Rp {{ total_spent|floatformat:0 }}</span>
-        <span class="stat-label">Total Belanja</span>
-    </div>
-    <div class="stat-cell">
-        <span class="stat-val">{{ pending_count }}</span>
-        <span class="stat-label">Menunggu Bayar</span>
-    </div>
-</div>
-
-<!-- Order cards -->
-<div class="order-list">
-{% for order in orders %}
-<div class="order-card">
-
-    <!-- Header: number + meta + status -->
-    <div class="oc-header">
+    <div class="acct-page-head">
         <div>
-            <div class="oc-num">{{ order.order_number }}</div>
-            <div class="oc-meta">
-                <span>{{ order.created_at|date:"d M Y" }}</span>
-                <span class="dot"></span>
-                <span>{{ order.items.all|length }} produk</span>
+            <span class="acct-eyebrow">Kafe</span>
+            <h1 class="acct-h1">Pesanan Saya</h1>
+        </div>
+    </div>
+
+    {% if overdue_count %}
+    <a href="/cafe/invoices/" class="acct-banner">
+        <span class="ab-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <span class="ab-t">
+            <span class="ab-title">{{ overdue_count }} tagihan kredit jatuh tempo</span>
+            <span class="ab-sub">Segera lunasi agar fasilitas kredit tetap aktif.</span>
+        </span>
+        <span class="ab-go">Bayar <i class="fa-solid fa-arrow-right"></i></span>
+    </a>
+    {% endif %}
+
+    {% if has_any %}
+
+    {% if last_order %}
+    <div class="po-reorder">
+        <div>
+            <div class="pr-eyebrow">Pesan lagi</div>
+            <div class="pr-items"><b>{{ last_order.order_number }}</b> · {% for item in last_order.items.all|slice:":3" %}{{ item.product_name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if last_order.items.all|length > 3 %} +{{ last_order.items.all|length|add:"-3" }} lainnya{% endif %}</div>
+        </div>
+        <form method="post" action="/orders/{{ last_order.order_number }}/reorder/" style="margin:0;">{% csrf_token %}
+            <button type="submit" class="acct-btn solid"><i class="fa-solid fa-rotate-right" style="font-size:10px;"></i> Ulangi Pesanan</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="po-tabs">
+        <a href="?status=all" class="po-tab {% if active_status == 'all' %}active{% endif %}">Semua <span class="c">{{ counts.all }}</span></a>
+        <a href="?status=pending" class="po-tab {% if active_status == 'pending' %}active{% endif %}">Menunggu Pembayaran <span class="c">{{ counts.pending }}</span></a>
+        <a href="?status=process" class="po-tab {% if active_status == 'process' %}active{% endif %}">Diproses <span class="c">{{ counts.process }}</span></a>
+        <a href="?status=done" class="po-tab {% if active_status == 'done' %}active{% endif %}">Selesai <span class="c">{{ counts.done }}</span></a>
+        <a href="?status=cancelled" class="po-tab {% if active_status == 'cancelled' %}active{% endif %}">Dibatalkan <span class="c">{{ counts.cancelled }}</span></a>
+    </div>
+
+    {% if orders %}
+    <div class="po-list">
+    {% for order in orders %}
+        <div class="po-card">
+            <a href="/orders/{{ order.order_number }}/" class="po-stretch" aria-label="Detail {{ order.order_number }}"></a>
+            <div class="po-top">
+                <div class="po-id">
+                    <span class="po-num">{{ order.order_number }}</span>
+                    <span class="po-meta">· {{ order.created_at|date:"d M Y" }}</span>
+                </div>
+                <div class="po-status">
+                    <span>{{ order.get_status_display }}</span>
+                    <i class="fa-solid fa-chevron-right po-chev"></i>
+                </div>
+            </div>
+            <div class="po-bot">
+                <div class="po-items">{% with total=order.items.all|length %}{% for item in order.items.all|slice:":3" %}{{ item.product_name }} ×{{ item.quantity }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if total > 3 %} · +{{ total|add:"-3" }} lainnya{% endif %}{% endwith %}</div>
+                <div class="po-right">
+                    <span class="acct-amount">Rp {{ order.total_amount|floatformat:0 }}</span>
+                    <div class="po-actions">
+                        <form method="post" action="/orders/{{ order.order_number }}/reorder/">{% csrf_token %}
+                            <button type="submit" class="po-icon-btn" title="Pesan lagi" aria-label="Pesan lagi"><i class="fa-solid fa-rotate-right"></i></button>
+                        </form>
+                        {% if order.status == 'PENDING' %}<a href="/payments/pay/{{ order.order_number }}/" class="acct-btn solid"><i class="fa-solid fa-lock" style="font-size:10px;"></i> Bayar</a>{% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-        <span class="status-badge status-{{ order.status }}">
-            {% if order.status == 'PENDING' %}<i class="fa-solid fa-circle-dot" style="font-size:7px;"></i>
-            {% elif order.status == 'CONFIRMED' %}<i class="fa-solid fa-circle-check" style="font-size:7px;"></i>
-            {% elif order.status == 'PROCESSING' %}<i class="fa-solid fa-gear" style="font-size:7px;"></i>
-            {% elif order.status == 'SHIPPED' %}<i class="fa-solid fa-truck" style="font-size:7px;"></i>
-            {% elif order.status == 'DELIVERED' %}<i class="fa-solid fa-box-open" style="font-size:7px;"></i>
-            {% elif order.status == 'CANCELLED' %}<i class="fa-solid fa-ban" style="font-size:7px;"></i>
-            {% endif %}
-            {{ order.get_status_display }}
-        </span>
+    {% endfor %}
     </div>
 
-    <!-- Items preview -->
-    <div class="oc-items">
-        {% with all_items=order.items.all total=order.items.all|length %}
-        {% for item in all_items|slice:":3" %}
-            {{ item.product_name }} <span style="color:var(--co-muted);">×{{ item.quantity }}&thinsp;{{ item.product_unit }}</span>{% if not forloop.last %}<span class="oc-item-sep">/</span>{% endif %}
-        {% endfor %}
-        {% if total > 3 %}
-            <span class="oc-item-sep">/</span><span class="oc-more">+{{ total|add:"-3" }} lainnya</span>
-        {% endif %}
-        {% endwith %}
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="po-pager">
+        {% if page_obj.has_previous %}<a href="?status={{ active_status }}&page={{ page_obj.previous_page_number }}" class="po-page" aria-label="Sebelumnya"><i class="fa-solid fa-chevron-left"></i></a>{% endif %}
+        <span class="po-page-info">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?status={{ active_status }}&page={{ page_obj.next_page_number }}" class="po-page" aria-label="Berikutnya"><i class="fa-solid fa-chevron-right"></i></a>{% endif %}
     </div>
+    {% endif %}
 
-    <!-- Footer: total + actions -->
-    <div class="oc-footer">
-        <span class="oc-total">Rp {{ order.total_amount|floatformat:0 }}</span>
-        <div class="oc-actions">
-            {% if order.status == 'PENDING' %}
-            <a href="/payments/pay/{{ order.order_number }}/" class="btn-pay-now">
-                <i class="fa-solid fa-lock" style="font-size:10px;"></i>Bayar
-            </a>
-            {% endif %}
-            <form method="post" action="/orders/{{ order.order_number }}/reorder/" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="btn-reorder">
-                    <i class="fa-solid fa-rotate-right" style="font-size:10px;"></i>Pesan Lagi
-                </button>
-            </form>
-            <a href="/orders/{{ order.order_number }}/" class="btn-detail">
-                Detail <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i>
-            </a>
-        </div>
+    {% else %}
+    <div class="po-filter-empty">Tidak ada pesanan pada kategori ini.</div>
+    {% endif %}
+
+    {% else %}
+    <div class="acct-empty">
+        <i class="fa-solid fa-receipt"></i>
+        <h4>Belum ada order</h4>
+        <p>Mulai pilih produk kopi untuk kafe kamu.</p>
+        <a href="/produk/" class="acct-btn solid"><i class="fa-solid fa-store"></i> Lihat Produk</a>
     </div>
+    {% endif %}
 
 </div>
-{% endfor %}
 </div>
-
-{% else %}
-<div class="order-empty">
-    <i class="fa-solid fa-file-invoice"></i>
-    <h4>Belum ada order</h4>
-    <p>Mulai pilih produk kopi untuk kafe kamu.</p>
-    <a href="/produk/" class="btn-start-shop">
-        <i class="fa-solid fa-store"></i>Lihat Produk
-    </a>
-</div>
-{% endif %}
-
 {% endblock %}

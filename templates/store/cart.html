@@ -8,8 +8,8 @@
     .cart-item {
         display: grid;
         grid-template-columns: 64px 1fr auto auto auto;
-        align-items: center; gap: 16px;
-        padding: 16px 20px;
+        align-items: center; gap: 14px;
+        padding: 12px 16px;
         border-bottom: 1px solid var(--co-hairline);
         background: var(--co-canvas);
         transition: background 0.12s;
@@ -35,27 +35,36 @@
         font-size: 11px; color: var(--co-muted); letter-spacing: 0.3px;
     }
 
-    /* Qty update form */
-    .cart-qty-form { display: flex; align-items: center; gap: 6px; }
+    /* Qty stepper (same pattern as product detail) */
+    .cart-qty-form { display: flex; align-items: center; gap: 0; }
+    .cart-stepper {
+        display: flex; align-items: center;
+        border: 1px solid var(--co-hairline);
+        border-radius: var(--r-xs); overflow: hidden;
+        background: var(--co-canvas);
+    }
+    .cart-stepper-btn {
+        width: 28px; height: 30px; border: none; background: transparent;
+        cursor: pointer; color: var(--co-ink); font-size: 15px;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s; flex-shrink: 0;
+    }
+    .cart-stepper-btn:hover { background: var(--co-stone); }
+    .cart-stepper-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .cart-qty-input {
-        width: 56px; height: 34px; border: 1px solid var(--co-hairline);
-        border-radius: var(--r-xs); text-align: center;
-        font-size: 14px; font-weight: 600; color: var(--co-primary);
-        background: var(--co-canvas); outline: none;
-        transition: border-color 0.15s;
+        width: 44px; height: 30px; border: none;
+        border-left: 1px solid var(--co-hairline);
+        border-right: 1px solid var(--co-hairline);
+        text-align: center; font-size: 14px; font-weight: 600;
+        color: var(--co-primary); background: var(--co-canvas);
+        outline: none; -moz-appearance: textfield; appearance: textfield;
     }
-    .cart-qty-input:focus { border-color: var(--co-form-focus); }
-    .btn-qty-update {
-        height: 34px; padding: 0 12px;
-        font-size: 12px; font-weight: 500; color: var(--co-muted);
-        background: var(--co-stone); border: 1px solid var(--co-hairline);
-        border-radius: var(--r-xs); cursor: pointer; transition: all 0.15s;
-    }
-    .btn-qty-update:hover { border-color: var(--co-primary); color: var(--co-primary); }
+    .cart-qty-input::-webkit-outer-spin-button,
+    .cart-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
     .cart-item-subtotal {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 15px; font-weight: 600; color: var(--co-primary);
+        font-size: 14px; font-weight: 600; color: var(--co-primary);
         text-align: right; white-space: nowrap; min-width: 100px;
     }
     .btn-remove {
@@ -68,12 +77,12 @@
     /* Cart table wrapper */
     .cart-table {
         border: 1px solid var(--co-hairline);
-        border-radius: var(--r-sm); overflow: hidden;
+        border-radius: var(--r-md); overflow: hidden;
     }
     .cart-table-header {
         display: grid;
         grid-template-columns: 64px 1fr auto auto auto;
-        gap: 16px; padding: 10px 20px;
+        gap: 14px; padding: 8px 16px;
         background: var(--co-stone);
         border-bottom: 1px solid var(--co-hairline);
     }
@@ -109,13 +118,13 @@
     }
     .btn-checkout {
         display: block; width: 100%;
-        background: var(--co-primary); color: #fff;
+        background: var(--co-coral); color: #fff;
         border: none; border-radius: var(--r-sm);
-        padding: 13px; font-size: 14px; font-weight: 500;
+        padding: 12px; font-size: 14px; font-weight: 600;
         text-align: center; text-decoration: none;
-        transition: background 0.15s;
+        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
     }
-    .btn-checkout:hover { background: var(--co-primary-hover); color: #fff; }
+    .btn-checkout:hover { background: #e8593b; color: #fff; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(255,119,89,0.28); }
     .btn-continue-shop {
         display: block; text-align: center; margin-top: 10px;
         font-size: 13px; color: var(--co-muted); text-decoration: none;
@@ -125,21 +134,60 @@
 
     /* Empty state */
     .cart-empty {
-        text-align: center; padding: 80px 24px;
+        text-align: center; padding: 56px 24px;
         border: 1px solid var(--co-hairline);
-        border-radius: var(--r-sm); background: var(--co-canvas);
+        border-radius: var(--r-md); background: var(--co-canvas);
     }
     .cart-empty i { font-size: 3rem; color: var(--co-muted); opacity: 0.3; display: block; margin-bottom: 16px; }
     .cart-empty h4 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--co-primary); margin-bottom: 8px; }
     .cart-empty p { color: var(--co-muted); font-size: 14px; margin-bottom: 24px; }
     .btn-start-shop {
         display: inline-block;
-        background: var(--co-primary); color: #fff;
-        border-radius: var(--r-sm); padding: 11px 28px;
-        font-size: 14px; font-weight: 500; text-decoration: none;
-        transition: background 0.15s;
+        background: var(--co-coral); color: #fff;
+        border-radius: var(--r-xl); padding: 11px 26px;
+        font-size: 14px; font-weight: 600; text-decoration: none;
+        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
     }
-    .btn-start-shop:hover { background: var(--co-primary-hover); color: #fff; }
+    .btn-start-shop:hover { background: #e8593b; color: #fff; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(255,119,89,0.28); }
+
+    /* ════════ EDITORIAL SECTION HEADER (landing language) ════════ */
+    .cart-head { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 26px; }
+    .cart-head .num {
+        font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+        color: var(--co-coral); letter-spacing: 1px; line-height: 2.2;
+    }
+    .cart-head .eyebrow {
+        font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;
+        text-transform: uppercase; color: var(--co-muted); display: block; margin-bottom: 8px;
+    }
+    .cart-head .heading {
+        font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.5rem, 3vw, 2.1rem);
+        font-weight: 400; letter-spacing: -0.035em; color: var(--co-primary); line-height: 1.1; margin: 0;
+    }
+    .cart-head .heading em { font-style: normal; position: relative; color: var(--co-coral); }
+    .cart-head .heading em::after {
+        content: ''; position: absolute; left: 0; right: 0; bottom: 0.04em; height: 0.08em;
+        background: var(--co-coral); opacity: 0.4; border-radius: 2px;
+    }
+
+    /* atmospheric summary header */
+    .summary-header {
+        background:
+            radial-gradient(ellipse 120% 140% at 90% 0%, rgba(255,119,89,0.10), transparent 60%),
+            var(--co-deep-green);
+        color: #fff !important; border-bottom: none;
+        display: flex; align-items: center; gap: 9px;
+    }
+    .summary-header .s-icon {
+        width: 26px; height: 26px; border-radius: var(--r-xs); flex-shrink: 0;
+        background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;
+        font-size: 11px;
+    }
+
+    /* scroll reveal */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s ease, transform 0.55s cubic-bezier(.2,.8,.2,1); }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; transition: none !important; } }
 
     @media (max-width: 640px) {
         .cart-table-header { display: none; }
@@ -171,10 +219,15 @@
     </div>
 </div>
 
-<span class="page-eyebrow">Keranjang Belanja</span>
-<h1 class="page-title">
-    {% if cart.total_items > 0 %}{{ cart.total_items }} produk dipilih{% else %}Keranjang kosong{% endif %}
-</h1>
+<div class="cart-head">
+    <span class="num">01</span>
+    <div>
+        <span class="eyebrow">Keranjang Belanja</span>
+        <h1 class="heading">
+            {% if cart.total_items > 0 %}{{ cart.total_items }} produk <em>dipilih</em>{% else %}Keranjang <em>kosong</em>{% endif %}
+        </h1>
+    </div>
+</div>
 
 {% if cart.total_items == 0 %}
 <div class="cart-empty">
@@ -190,7 +243,7 @@
 <div class="row g-4">
     <!-- Items -->
     <div class="col-lg-8">
-        <div class="cart-table">
+        <div class="cart-table reveal">
             <div class="cart-table-header">
                 <span></span>
                 <span>Produk</span>
@@ -216,13 +269,23 @@
                     <div class="cart-item-unit">Rp {{ item.product.price|floatformat:0 }} / {{ item.product.unit }}</div>
                 </div>
 
-                <!-- Qty update -->
-                <form method="post" action="/cart/update/{{ item.id }}/" class="cart-qty-form">
+                <!-- Qty stepper -->
+                <form method="post" action="/cart/update/{{ item.id }}/" class="cart-qty-form cart-item-qty-form">
                     {% csrf_token %}
-                    <input type="number" name="quantity" value="{{ item.quantity }}"
-                           min="{{ item.product.minimum_order }}" max="{{ item.product.stock }}"
-                           class="cart-qty-input" aria-label="Jumlah {{ item.product.name }}">
-                    <button type="submit" class="btn-qty-update">Ubah</button>
+                    <div class="cart-stepper">
+                        <button type="button" class="cart-stepper-btn cart-btn-minus"
+                                aria-label="Kurangi {{ item.product.name }}"
+                                data-min="{{ item.product.minimum_order }}">&#8722;</button>
+                        <input type="number" name="quantity" value="{{ item.quantity }}"
+                               min="{{ item.product.minimum_order }}" max="{{ item.product.stock }}"
+                               class="cart-qty-input"
+                               aria-label="Jumlah {{ item.product.name }}"
+                               data-min="{{ item.product.minimum_order }}"
+                               data-max="{{ item.product.stock }}">
+                        <button type="button" class="cart-stepper-btn cart-btn-plus"
+                                aria-label="Tambah {{ item.product.name }}"
+                                data-max="{{ item.product.stock }}">&#43;</button>
+                    </div>
                 </form>
 
                 <!-- Subtotal -->
@@ -248,8 +311,8 @@
 
     <!-- Summary -->
     <div class="col-lg-4">
-        <div class="summary-card">
-            <div class="summary-header">Ringkasan Order</div>
+        <div class="summary-card reveal" style="transition-delay:0.1s;">
+            <div class="summary-header"><span class="s-icon"><i class="fa-solid fa-receipt"></i></span> Ringkasan Order</div>
             <div class="summary-body">
                 <div class="summary-row">
                     <span class="label">Total item</span>
@@ -278,4 +341,59 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    document.querySelectorAll('.cart-item-qty-form').forEach(function (form) {
+        var input   = form.querySelector('.cart-qty-input');
+        var minusBtn = form.querySelector('.cart-btn-minus');
+        var plusBtn  = form.querySelector('.cart-btn-plus');
+        if (!input) return;
+
+        var min = parseInt(input.dataset.min, 10) || 1;
+        var max = parseInt(input.dataset.max, 10) || 9999;
+
+        function clamp(v) { return Math.max(min, Math.min(max, v)); }
+
+        function updateState() {
+            var val = clamp(parseInt(input.value, 10) || min);
+            input.value = val;
+            if (minusBtn) minusBtn.disabled = val <= min;
+            if (plusBtn)  plusBtn.disabled  = val >= max;
+        }
+
+        minusBtn && minusBtn.addEventListener('click', function () {
+            input.value = clamp(parseInt(input.value, 10) - 1);
+            updateState();
+            form.submit();
+        });
+        plusBtn && plusBtn.addEventListener('click', function () {
+            input.value = clamp(parseInt(input.value, 10) + 1);
+            updateState();
+            form.submit();
+        });
+        input.addEventListener('change', function () {
+            updateState();
+            form.submit();
+        });
+
+        updateState();
+    });
+
+    /* ── scroll reveal ── */
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window) || !els.length) {
+        els.forEach(function (e) { e.classList.add('in'); });
+    } else {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        els.forEach(function (e) { io.observe(e); });
+    }
+})();
+</script>
 {% endblock %}

@@ -346,12 +346,6 @@
         <!-- Actions -->
         <div class="action-stack">
 
-            {% if order.status == 'SHIPPED' or order.status == 'DELIVERED' %}
-            <a href="/delivery/track/{{ order.order_number }}/" class="btn-outline-co">
-                <i class="fa-solid fa-location-dot" style="font-size:12px;"></i>Tracking Pengiriman
-            </a>
-            {% endif %}
-
             <form method="post" action="/orders/{{ order.order_number }}/reorder/" style="display:contents;">
                 {% csrf_token %}
                 <button type="submit" class="btn-outline-co">

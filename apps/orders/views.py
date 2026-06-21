@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -17,20 +18,57 @@ def order_detail(request, order_number):
     return render(request, 'store/order_detail.html', {'order': order})
 
 
+ORDER_STATUS_GROUPS = {
+    'all': None,
+    'pending': ['PENDING'],
+    'process': ['CONFIRMED', 'PROCESSING', 'SHIPPED'],
+    'done': ['DELIVERED'],
+    'cancelled': ['CANCELLED'],
+}
+
+
 @cafe_required
 def order_list(request):
-    orders = (
-        Order.objects
-        .filter(cafe=request.user)
-        .prefetch_related('items')
-        .order_by('-created_at')
-    )
-    agg = Order.objects.filter(cafe=request.user).aggregate(total_spent=Sum('total_amount'))
-    pending_count = Order.objects.filter(cafe=request.user, status='PENDING').count()
+    from django.db.models import Q, Count
+    from django.utils import timezone
+    from django.core.paginator import Paginator
+
+    active = request.GET.get('status', 'all')
+    if active not in ORDER_STATUS_GROUPS:
+        active = 'all'
+
+    base = Order.objects.filter(cafe=request.user)
+
+    # Jumlah pesanan per grup status untuk badge tab
+    raw = dict(base.values_list('status').annotate(c=Count('id')))
+    counts = {
+        key: (sum(raw.values()) if group is None else sum(raw.get(s, 0) for s in group))
+        for key, group in ORDER_STATUS_GROUPS.items()
+    }
+
+    orders_qs = base.prefetch_related('items').order_by('-created_at')
+    group = ORDER_STATUS_GROUPS[active]
+    if group:
+        orders_qs = orders_qs.filter(status__in=group)
+
+    page_obj = Paginator(orders_qs, 10).get_page(request.GET.get('page'))
+    last_order = base.order_by('-created_at').first()
+
+    credit = getattr(request.user, 'credit_account', None)
+    overdue_count = 0
+    if credit and credit.is_enabled:
+        overdue_count = credit.invoices.filter(
+            Q(status='OVERDUE') | Q(status='UNPAID', due_date__lt=timezone.now().date())
+        ).count()
+
     return render(request, 'cafe/order_history.html', {
-        'orders': orders,
-        'total_spent': agg['total_spent'] or 0,
-        'pending_count': pending_count,
+        'page_obj': page_obj,
+        'orders': page_obj.object_list,
+        'counts': counts,
+        'active_status': active,
+        'has_any': bool(raw),
+        'last_order': last_order,
+        'overdue_count': overdue_count,
     })
 
 

@@ -1,0 +1,219 @@
+{% extends 'base_store.html' %}
+{% block title %}Bayar Tagihan Kredit {{ invoice.order.order_number }} — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+    .pay-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start;}
+    @media(max-width:860px){.pay-layout{grid-template-columns:1fr;}}
+
+    .pay-card{background:var(--co-canvas);border:1px solid var(--co-hairline);border-radius:var(--r-md);overflow:hidden;margin-bottom:16px;}
+    .pay-card-head{padding:14px 20px;border-bottom:1px solid var(--co-hairline);display:flex;align-items:center;gap:10px;}
+    .pay-card-head .ico{width:26px;height:26px;border-radius:var(--r-xs);background:var(--co-pale-green);color:var(--co-deep-green);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+    .pay-card-head .ttl{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--co-primary);}
+    .pay-card-body{padding:18px 20px;}
+
+    /* Banner jatuh tempo */
+    .due-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-radius:var(--r-md);padding:14px 18px;margin-bottom:16px;}
+    .due-banner i{font-size:16px;}
+    .due-banner-text{font-size:13px;}
+    .due-banner-text b{font-weight:600;}
+    .due-banner-tag{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12px;padding:4px 10px;border-radius:var(--r-xs);margin-left:auto;white-space:nowrap;}
+    .due-ok{background:var(--co-amber-bg);border:1px solid var(--co-amber-border);}
+    .due-ok i,.due-ok .due-banner-text b{color:var(--co-amber-dim);}
+    .due-ok .due-banner-text{color:var(--co-amber-text);}
+    .due-ok .due-banner-tag{background:var(--co-amber-dim);color:#fff;}
+    .due-late{background:var(--co-error-bg);border:1px solid var(--co-error-border);}
+    .due-late i,.due-late .due-banner-text,.due-late .due-banner-text b{color:var(--co-error);}
+    .due-late .due-banner-tag{background:var(--co-error);color:#fff;}
+
+    /* Daftar produk */
+    .pay-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--co-hairline);}
+    .pay-item:first-child{padding-top:0;}
+    .pay-item:last-child{border-bottom:none;padding-bottom:0;}
+    .pay-item-img{width:56px;height:56px;flex-shrink:0;border:1px solid var(--co-hairline);border-radius:var(--r-sm);overflow:hidden;background:var(--co-stone);display:flex;align-items:center;justify-content:center;}
+    .pay-item-img img{width:100%;height:100%;object-fit:cover;}
+    .pay-item-img .ph{color:var(--co-muted);opacity:.4;font-size:18px;}
+    .pay-item-info{flex:1;min-width:0;}
+    .pay-item-name{font-size:13px;font-weight:600;color:var(--co-primary);margin-bottom:4px;line-height:1.35;}
+    .pay-item-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--co-muted);}
+    .pay-item-sub{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--co-primary);text-align:right;white-space:nowrap;align-self:center;}
+
+    /* Metode */
+    .pay-method-group{margin-bottom:16px;}
+    .pay-method-group:last-child{margin-bottom:0;}
+    .pay-method-label{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--co-muted);display:flex;align-items:center;gap:7px;margin-bottom:10px;}
+    .pay-method-chips{display:flex;flex-wrap:wrap;gap:8px;}
+    .pay-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--co-hairline);border-radius:var(--r-sm);padding:7px 12px;font-size:12px;font-weight:600;color:var(--co-ink);background:var(--co-canvas);}
+    .pay-chip i{font-size:12px;color:var(--co-slate);}
+
+    /* Aside */
+    .pay-aside{position:sticky;top:88px;}
+    .price-line{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:13px;}
+    .price-line .lbl{color:var(--co-muted);}
+    .price-line .val{color:var(--co-ink);font-weight:500;}
+    .pay-total{display:flex;justify-content:space-between;align-items:baseline;padding-top:14px;margin-top:14px;border-top:1px solid var(--co-hairline);}
+    .pay-total .lbl{font-size:14px;font-weight:600;color:var(--co-primary);}
+    .pay-total .val{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:600;color:var(--co-primary);letter-spacing:-.02em;}
+    .btn-pay{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:var(--co-coral);color:#fff;border:none;border-radius:var(--r-sm);padding:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:18px;transition:background .15s,transform .12s,box-shadow .15s;}
+    .btn-pay:hover{background:#e8593b;transform:translateY(-1px);box-shadow:0 10px 24px rgba(255,119,89,.28);}
+    .pay-hint{text-align:center;font-size:12px;color:var(--co-muted);margin:12px 0 0;}
+    .trust-strip{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:16px;padding-top:16px;border-top:1px solid var(--co-hairline);flex-wrap:wrap;}
+    .trust-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--co-muted);}
+    .trust-badge i{color:var(--co-deep-green);font-size:11px;}
+    .btn-back-link{display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--co-muted);text-decoration:none;transition:color .15s;}
+    .btn-back-link:hover{color:var(--co-primary);}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<span class="page-eyebrow">Kredit Dagang</span>
+<h1 class="page-title">Bayar Tagihan</h1>
+
+<!-- Banner jatuh tempo -->
+<div class="due-banner {% if days_left < 0 %}due-late{% else %}due-ok{% endif %}">
+    <i class="fa-solid {% if days_left < 0 %}fa-triangle-exclamation{% else %}fa-calendar-day{% endif %}"></i>
+    <div class="due-banner-text">
+        {% if days_left < 0 %}
+            <b>Tagihan ini sudah melewati jatuh tempo</b> ({{ invoice.due_date|date:'d M Y' }}).
+        {% elif days_left == 0 %}
+            <b>Jatuh tempo hari ini</b> — {{ invoice.due_date|date:'d M Y' }}.
+        {% else %}
+            Jatuh tempo <b>{{ invoice.due_date|date:'d M Y' }}</b>.
+        {% endif %}
+    </div>
+    <span class="due-banner-tag">
+        {% if days_left < 0 %}Telat {{ days_left|stringformat:'d'|cut:'-' }} hari
+        {% elif days_left == 0 %}Hari ini
+        {% else %}{{ days_left }} hari lagi{% endif %}
+    </span>
+</div>
+
+<div class="pay-layout">
+
+    <!-- KIRI -->
+    <div class="pay-main">
+        <!-- Produk -->
+        <div class="pay-card">
+            <div class="pay-card-head">
+                <span class="ico"><i class="fa-solid fa-box-open"></i></span>
+                <span class="ttl">Produk pada Tagihan</span>
+            </div>
+            <div class="pay-card-body">
+                {% for item in order_items %}
+                <div class="pay-item">
+                    <div class="pay-item-img">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}">
+                        {% else %}
+                            <span class="ph"><i class="fa-solid fa-mug-hot"></i></span>
+                        {% endif %}
+                    </div>
+                    <div class="pay-item-info">
+                        <div class="pay-item-name">{{ item.product_name }}</div>
+                        <div class="pay-item-meta">{{ item.quantity }} {{ item.product_unit }} × Rp {{ item.unit_price|floatformat:0 }}</div>
+                    </div>
+                    <div class="pay-item-sub">Rp {{ item.subtotal|floatformat:0 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Metode -->
+        <div class="pay-card">
+            <div class="pay-card-head">
+                <span class="ico"><i class="fa-solid fa-credit-card"></i></span>
+                <span class="ttl">Metode Pembayaran Tersedia</span>
+            </div>
+            <div class="pay-card-body">
+                <div class="pay-method-group">
+                    <div class="pay-method-label"><i class="fa-solid fa-building-columns"></i> Transfer Bank (Virtual Account)</div>
+                    <div class="pay-method-chips">
+                        <span class="pay-chip">BCA</span><span class="pay-chip">BNI</span><span class="pay-chip">BRI</span><span class="pay-chip">Mandiri</span><span class="pay-chip">Permata</span>
+                    </div>
+                </div>
+                <div class="pay-method-group">
+                    <div class="pay-method-label"><i class="fa-solid fa-wallet"></i> E-Wallet & QRIS</div>
+                    <div class="pay-method-chips">
+                        <span class="pay-chip">GoPay</span><span class="pay-chip">ShopeePay</span><span class="pay-chip"><i class="fa-solid fa-qrcode"></i> QRIS</span>
+                    </div>
+                </div>
+                <div class="pay-method-group">
+                    <div class="pay-method-label"><i class="fa-solid fa-credit-card"></i> Kartu Kredit / Debit</div>
+                    <div class="pay-method-chips">
+                        <span class="pay-chip"><i class="fa-brands fa-cc-visa"></i> Visa</span><span class="pay-chip"><i class="fa-brands fa-cc-mastercard"></i> Mastercard</span><span class="pay-chip">JCB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KANAN -->
+    <div class="pay-aside">
+        <div class="pay-card">
+            <div class="pay-card-head">
+                <span class="ico"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+                <span class="ttl">Ringkasan Tagihan</span>
+            </div>
+            <div class="pay-card-body">
+                <div class="price-line">
+                    <span class="lbl">No. Order</span>
+                    <span class="val" style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ invoice.order.order_number }}</span>
+                </div>
+                <div class="price-line">
+                    <span class="lbl">Jatuh tempo</span>
+                    <span class="val">{{ invoice.due_date|date:'d M Y' }}</span>
+                </div>
+                <div class="pay-total">
+                    <span class="lbl">Total Tagihan</span>
+                    <span class="val">Rp {{ invoice.amount|floatformat:0 }}</span>
+                </div>
+
+                <button id="pay-btn" class="btn-pay">
+                    <i class="fa-solid fa-lock" style="font-size:13px;"></i> Bayar Sekarang
+                </button>
+                <p id="pay-hint" class="pay-hint">
+                    <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Membuka halaman pembayaran...
+                </p>
+
+                <div class="trust-strip">
+                    <div class="trust-badge"><i class="fa-solid fa-shield-halved"></i><span>SSL Secured</span></div>
+                    <div class="trust-badge"><i class="fa-solid fa-credit-card"></i><span>via Midtrans</span></div>
+                </div>
+
+                <a href="/cafe/invoices/" class="btn-back-link">
+                    <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i>Kembali ke Tagihan
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://app.{% if not is_production %}sandbox.{% endif %}midtrans.com/snap/snap.js"
+        data-client-key="{{ client_key }}"></script>
+<script>
+(function () {
+    var btn  = document.getElementById('pay-btn');
+    var hint = document.getElementById('pay-hint');
+
+    function pay() {
+        snap.pay('{{ invoice.snap_token }}', {
+            onSuccess: function () { window.location = '/cafe/invoices/'; },
+            onPending: function () { window.location = '/cafe/invoices/'; },
+            onError:   function () {
+                if (window.showToast) { window.showToast('Pembayaran gagal. Silakan coba lagi.', 'error'); }
+                else { alert('Pembayaran gagal. Silakan coba lagi.'); }
+            },
+            onClose:   function () {
+                if (hint) hint.innerHTML = 'Pembayaran dibatalkan. Klik tombol di atas untuk melanjutkan.';
+            }
+        });
+    }
+
+    btn.addEventListener('click', pay);
+    if (window.snap) { pay(); }
+    else { window.addEventListener('load', pay); }
+})();
+</script>
+{% endblock %}

@@ -6,7 +6,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.core import signing
 from django.conf import settings as django_settings
-from .forms import CafeRegistrationForm
+from .forms import CafeRegistrationForm, ProfileEditForm
 from .models import CafeProfile, EmailOTP, StaffInvitation, SupplierStaff, User
 
 BACKEND = 'django.contrib.auth.backends.ModelBackend'
@@ -213,6 +213,22 @@ def profile_view(request):
         except CafeProfile.DoesNotExist:
             pass
     return render(request, 'accounts/profile.html', {'profile': profile})
+
+
+@login_required
+def profile_edit(request):
+    if not request.user.is_cafe:
+        return redirect('profile')
+    profile = get_object_or_404(CafeProfile, user=request.user)
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profil kafe berhasil diperbarui.')
+            return redirect('profile')
+    else:
+        form = ProfileEditForm(instance=profile)
+    return render(request, 'accounts/profile_edit.html', {'form': form})
 
 
 def supplier_login(request):

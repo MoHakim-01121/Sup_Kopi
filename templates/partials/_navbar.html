@@ -17,7 +17,8 @@
         <!-- Zone 3: Actions -->
         <div class="nav-actions">
             {% if user.is_authenticated %}
-                <a href="/cart/" class="nav-action-link cart-badge" aria-label="Keranjang">
+                <a href="/cart/" class="nav-action-link cart-badge" aria-label="Keranjang"
+                   onclick="if(window.openCartDrawer){event.preventDefault();window.openCartDrawer();}">
                     <i class="fa-solid fa-cart-shopping" style="font-size:15px;"></i>
                     <span class="cart-count" id="cartCountBadge"
                           style="{% if not cart_count %}display:none;{% endif %}"
@@ -36,8 +37,12 @@
                                 {% if user.cafe_profile.cafe_name %}{{ user.cafe_profile.cafe_name }}{% else %}{{ user.username }}{% endif %}
                             </div>
                         </div>
-                        <a href="/cafe/dashboard/" class="dropdown-item-custom"><i class="fa-solid fa-gauge"></i> Dashboard</a>
                         <a href="/orders/" class="dropdown-item-custom"><i class="fa-solid fa-receipt"></i> Pesanan Saya</a>
+                        {% with credit=user.credit_account %}
+                        {% if credit and credit.is_enabled %}
+                        <a href="/cafe/invoices/" class="dropdown-item-custom"><i class="fa-solid fa-file-invoice-dollar"></i> Tagihan Kredit</a>
+                        {% endif %}
+                        {% endwith %}
                         <a href="/accounts/profile/" class="dropdown-item-custom"><i class="fa-solid fa-user"></i> Profil Kafe</a>
                         <div class="dropdown-divider-custom"></div>
                         <a href="/accounts/logout/" class="dropdown-item-custom dropdown-item-danger">
@@ -61,8 +66,12 @@
     <a href="/produk/">Produk</a>
     {% if user.is_authenticated %}
         <a href="/cart/"><i class="fa-solid fa-cart-shopping me-2" style="font-size:12px;"></i>Keranjang</a>
-        <a href="/orders/">Pesanan</a>
-        <a href="/cafe/dashboard/"><i class="fa-solid fa-gauge me-2" style="font-size:12px;"></i>Dashboard</a>
+        <a href="/orders/"><i class="fa-solid fa-receipt me-2" style="font-size:12px;"></i>Pesanan Saya</a>
+        {% with credit=user.credit_account %}
+        {% if credit and credit.is_enabled %}
+        <a href="/cafe/invoices/"><i class="fa-solid fa-file-invoice-dollar me-2" style="font-size:12px;"></i>Tagihan Kredit</a>
+        {% endif %}
+        {% endwith %}
         <a href="/accounts/logout/" class="mobile-cta">Logout</a>
     {% else %}
         <a href="/accounts/login/">Masuk</a>

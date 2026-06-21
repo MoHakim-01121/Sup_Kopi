@@ -45,17 +45,25 @@
                 {% endfor %}
                 {% endif %}
 
-                <form method="post">
+                <form method="post" id="otpForm">
                     {% csrf_token %}
                     <div class="mb-4">
                         <label class="form-label text-center d-block">Masukkan Kode OTP</label>
-                        <input type="text" name="code" class="form-control otp-input"
+                        <input type="text" name="code" id="otpCodeInput" class="form-control otp-input"
                                maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
                                placeholder="000000" autofocus required>
                     </div>
-                    <button type="submit" class="btn btn-dark w-100" style="padding:12px;">
-                        <i class="fa-solid fa-shield-halved me-2"></i>Verifikasi & Masuk
+                    <button type="submit" id="otpSubmitBtn" class="btn btn-dark w-100" style="padding:12px;">
+                        <span id="otpBtnContent">
+                            <i class="fa-solid fa-shield-halved me-2"></i>Verifikasi & Masuk
+                        </span>
+                        <span id="otpBtnLoading" style="display:none;">
+                            <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Memverifikasi...
+                        </span>
                     </button>
+                    <div id="otpExpiredMsg" style="display:none; margin-top:10px; padding:10px 14px; background:#fff1f0; border:1px solid #fecaca; border-radius:var(--r-xs); font-size:13px; color:var(--co-error); text-align:center;">
+                        <i class="fa-solid fa-clock me-1"></i>Kode sudah kedaluwarsa. Gunakan tombol "Kirim Ulang" di bawah.
+                    </div>
                 </form>
 
                 <div class="text-center mt-4" style="font-size:13px; color:var(--co-muted);">
@@ -87,7 +95,11 @@
 <script>
 (function () {
     let secs = 600;
-    const el = document.getElementById('countdown');
+    const el      = document.getElementById('countdown');
+    const btn     = document.getElementById('otpSubmitBtn');
+    const input   = document.getElementById('otpCodeInput');
+    const expMsg  = document.getElementById('otpExpiredMsg');
+
     const timer = setInterval(() => {
         secs--;
         const m = String(Math.floor(secs / 60)).padStart(2, '0');
@@ -97,8 +109,19 @@
             clearInterval(timer);
             el.textContent = 'Kedaluwarsa';
             el.style.color = 'var(--co-error)';
+            btn.disabled = true;
+            btn.style.opacity = '0.4';
+            input.disabled = true;
+            expMsg.style.display = 'block';
         }
     }, 1000);
+
+    document.getElementById('otpForm').addEventListener('submit', function () {
+        if (btn.disabled) return;
+        document.getElementById('otpBtnContent').style.display = 'none';
+        document.getElementById('otpBtnLoading').style.display = 'inline';
+        btn.disabled = true;
+    });
 })();
 </script>
 {% endblock %}

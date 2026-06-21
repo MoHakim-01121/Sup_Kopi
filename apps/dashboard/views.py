@@ -1,5 +1,6 @@
 import csv
 import uuid
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Sum, Count, Q, F
@@ -15,7 +16,7 @@ from apps.accounts.decorators import supplier_required, supplier_admin_required,
 from apps.accounts.models import SupplierStaff, StaffInvitation, User
 from apps.orders.models import Order, OrderItem
 from apps.catalog.models import Product, Category
-from apps.payments.models import Payment
+from apps.payments.models import Payment, CafeCredit, CreditInvoice
 
 PAGE_SIZE = 15
 PAID_STATUSES = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
@@ -24,8 +25,15 @@ PAID_STATUSES = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
 def _filtered_orders(request):
     qs = Order.objects.select_related('cafe__cafe_profile').order_by('-created_at')
     status = request.GET.get('status')
+    q = request.GET.get('q', '').strip()
     if status:
         qs = qs.filter(status=status)
+    if q:
+        qs = qs.filter(
+            Q(order_number__icontains=q) |
+            Q(cafe__cafe_profile__cafe_name__icontains=q) |
+            Q(cafe__email__icontains=q)
+        )
     return qs, status
 
 
@@ -59,20 +67,26 @@ def supplier_dashboard(request):
     pending_payments = Payment.objects.filter(status='PENDING').count()
     low_stock_count = Product.objects.filter(stock__lt=F('minimum_order'), is_active=True).count()
 
-    top_products = (
+    top_products = list(
         OrderItem.objects
         .values('product__name', 'product__id')
         .annotate(total_qty=Sum('quantity'), total_revenue=Sum('subtotal'))
         .order_by('-total_qty')[:5]
     )
+    max_qty = top_products[0]['total_qty'] if top_products else 0
+    for p in top_products:
+        p['pct'] = round(p['total_qty'] / max_qty * 100) if max_qty else 0
 
-    top_cafes = (
+    top_cafes = list(
         Order.objects
         .filter(status__in=PAID_STATUSES)
         .values('cafe__cafe_profile__cafe_name', 'cafe__id')
         .annotate(order_count=Count('id'), total_spent=Sum('total_amount'))
         .order_by('-total_spent')[:5]
     )
+    max_spent = top_cafes[0]['total_spent'] if top_cafes else 0
+    for c in top_cafes:
+        c['pct'] = round(float(c['total_spent']) / float(max_spent) * 100) if max_spent else 0
 
     recent_orders = Order.objects.select_related('cafe__cafe_profile').order_by('-created_at')[:10]
 
@@ -105,7 +119,6 @@ def order_management(request):
 @supplier_admin_required
 def order_detail_supplier(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
-    delivery = getattr(order, 'delivery', None)
     payment = getattr(order, 'payment', None)
     cafe_orders = (
         Order.objects
@@ -115,10 +128,28 @@ def order_detail_supplier(request, order_number):
     )
     return render(request, 'supplier/order_detail.html', {
         'order': order,
-        'delivery': delivery,
         'payment': payment,
         'cafe_orders': cafe_orders,
     })
+
+
+@supplier_admin_required
+def update_order_status(request, order_number):
+    """Ubah status order secara manual (menggantikan modul delivery)."""
+    if request.method != 'POST':
+        return redirect(f'/supplier/orders/{order_number}/')
+    order = get_object_or_404(Order, order_number=order_number)
+    new_status = request.POST.get('status')
+    valid = {s for s, _ in Order.STATUS_CHOICES}
+    if new_status not in valid:
+        messages.error(request, 'Status tidak valid.')
+        return redirect(f'/supplier/orders/{order_number}/')
+    order.status = new_status
+    if new_status == 'CONFIRMED' and not order.confirmed_at:
+        order.confirmed_at = timezone.now()
+    order.save()
+    messages.success(request, f'Status order {order_number} diperbarui menjadi {order.get_status_display()}.')
+    return redirect(f'/supplier/orders/{order_number}/')
 
 
 @supplier_admin_required
@@ -240,31 +271,6 @@ def sales_chart_data(request):
     })
 
 
-@cafe_required
-def cafe_dashboard(request):
-    cafe = request.user
-    today = timezone.now().date()
-    month_start = today.replace(day=1)
-
-    recent_orders = Order.objects.filter(cafe=cafe).order_by('-created_at')[:5]
-    monthly_spend = Order.objects.filter(
-        cafe=cafe,
-        status__in=PAID_STATUSES,
-        created_at__date__gte=month_start,
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-
-    active_orders = Order.objects.filter(
-        cafe=cafe,
-        status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED'],
-    )
-
-    return render(request, 'cafe/dashboard.html', {
-        'recent_orders': recent_orders,
-        'monthly_spend': monthly_spend,
-        'active_orders': active_orders,
-    })
-
-
 # ── Staff Management ──────────────────────────────────────────────────────────
 
 @supplier_owner_required
@@ -339,3 +345,201 @@ def staff_change_role(request, staff_id):
         staff.save()
         messages.success(request, f'Role "{staff.user.username}" diubah ke {staff.get_role_display()}.')
     return redirect('/supplier/staff/')
+
+
+# ── Kredit Dagang — Supplier ──────────────────────────────────────────────────
+
+@supplier_owner_required
+def credit_management(request):
+    """Daftar semua kafe beserta status kredit mereka."""
+    cafes = User.objects.filter(role='cafe').select_related('cafe_profile', 'credit_account').order_by('cafe_profile__cafe_name')
+    overdue_count = CreditInvoice.objects.filter(status='OVERDUE').count()
+    verifying_count = CreditInvoice.objects.filter(status='VERIFYING').count()
+    return render(request, 'supplier/credit_management.html', {
+        'cafes': cafes,
+        'overdue_count': overdue_count,
+        'verifying_count': verifying_count,
+    })
+
+
+@supplier_owner_required
+def credit_detail(request, cafe_id):
+    """Detail kredit satu kafe + list semua invoice-nya."""
+    cafe = get_object_or_404(User, id=cafe_id, role='cafe')
+    credit, _ = CafeCredit.objects.get_or_create(cafe=cafe)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'update':
+            credit.credit_limit = request.POST.get('credit_limit', 0)
+            credit.payment_term_days = request.POST.get('payment_term_days', 30)
+            credit.is_enabled = request.POST.get('is_enabled') == 'on'
+            credit.save()
+            messages.success(request, 'Pengaturan kredit berhasil disimpan.')
+        return redirect(f'/supplier/credits/{cafe_id}/')
+
+    invoices = credit.invoices.select_related('order', 'confirmed_by').order_by('-created_at')
+    return render(request, 'supplier/credit_detail.html', {
+        'cafe': cafe,
+        'credit': credit,
+        'invoices': invoices,
+    })
+
+
+@supplier_admin_required
+def invoice_verify(request, invoice_id):
+    """Supplier review bukti transfer → konfirmasi atau tolak."""
+    invoice = get_object_or_404(CreditInvoice, id=invoice_id, status='VERIFYING')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'confirm':
+            invoice.confirm_manual(confirmed_by=request.user)
+            messages.success(request, f'Invoice {invoice.order.order_number} dikonfirmasi lunas.')
+            return redirect(f'/supplier/credits/{invoice.credit_account.cafe_id}/')
+        elif action == 'reject':
+            reason = request.POST.get('reason', '').strip()
+            if not reason:
+                messages.error(request, 'Alasan penolakan wajib diisi.')
+            else:
+                invoice.reject_proof(reason=reason)
+                messages.warning(request, f'Bukti invoice {invoice.order.order_number} ditolak.')
+                return redirect(f'/supplier/credits/{invoice.credit_account.cafe_id}/')
+
+    return render(request, 'supplier/invoice_verify.html', {'invoice': invoice})
+
+
+# ── Kredit Dagang — Kafe ──────────────────────────────────────────────────────
+
+@cafe_required
+def cafe_invoices(request, invoice_id=None):
+    """Kafe melihat semua tagihan kredit mereka."""
+    credit = getattr(request.user, 'credit_account', None)
+    if not credit:
+        messages.info(request, 'Kamu belum memiliki fasilitas kredit.')
+        return redirect('/orders/')
+
+    # Fallback untuk local dev: Midtrans tidak bisa kirim webhook ke localhost,
+    # tapi query params sudah dikirim saat redirect finish.
+    order_id = request.GET.get('order_id')
+    transaction_status = request.GET.get('transaction_status')
+    if order_id and transaction_status in ('settlement', 'capture'):
+        try:
+            inv = CreditInvoice.objects.get(
+                midtrans_order_id=order_id,
+                credit_account=credit,
+                status__in=['UNPAID', 'OVERDUE'],
+            )
+            inv.mark_paid_online()
+            messages.success(request, f'Pembayaran invoice {inv.order.order_number} berhasil dikonfirmasi.')
+        except CreditInvoice.DoesNotExist:
+            pass
+
+    today = timezone.now().date()
+    all_invoices = list(credit.invoices.select_related('order').all())
+    for inv in all_invoices:
+        inv.days_left = (inv.due_date - today).days
+
+    def _bucket(inv):
+        if inv.status == 'PAID':
+            return 'paid'
+        if inv.status == 'VERIFYING':
+            return 'verifying'
+        if inv.days_left <= 0:
+            return 'attention'
+        if inv.days_left <= 7:
+            return 'week'
+        return 'upcoming'
+
+    buckets = {'attention': [], 'week': [], 'upcoming': [], 'verifying': [], 'paid': []}
+    for inv in all_invoices:
+        buckets[_bucket(inv)].append(inv)
+
+    # Tagihan aktif: paling mendesak dulu. Selesai: terbaru dulu.
+    for key in ('attention', 'week', 'upcoming'):
+        buckets[key].sort(key=lambda i: i.days_left)
+    buckets['verifying'].sort(key=lambda i: i.created_at, reverse=True)
+    buckets['paid'].sort(key=lambda i: i.created_at, reverse=True)
+
+    GROUP_META = [
+        ('attention', 'Perlu Perhatian', 'danger'),
+        ('week', 'Minggu Ini', 'warn'),
+        ('upcoming', 'Mendatang', 'normal'),
+        ('verifying', 'Menunggu Verifikasi', 'normal'),
+        ('paid', 'Lunas', 'ok'),
+    ]
+    groups = [
+        {'key': k, 'label': lbl, 'tone': tone, 'items': buckets[k]}
+        for k, lbl, tone in GROUP_META if buckets[k]
+    ]
+    due_invoices = buckets['attention'] + buckets['week'] + buckets['upcoming']
+    outstanding_count = len(due_invoices)
+    total_due = sum((inv.amount for inv in due_invoices), Decimal('0'))
+    overdue_count = len(buckets['attention'])
+    overdue_total = sum((inv.amount for inv in buckets['attention']), Decimal('0'))
+    next_due = min(due_invoices, key=lambda i: i.days_left) if due_invoices else None
+
+    # Utilisasi kredit dalam persen (untuk track garis kredit)
+    utilization = 0
+    if credit.credit_limit and credit.credit_limit > 0:
+        utilization = round(float(credit.outstanding_balance) / float(credit.credit_limit) * 100)
+
+    return render(request, 'cafe/invoices.html', {
+        'credit': credit,
+        'groups': groups,
+        'outstanding_count': outstanding_count,
+        'total_due': total_due,
+        'overdue_count': overdue_count,
+        'overdue_total': overdue_total,
+        'next_due': next_due,
+        'has_any': bool(all_invoices),
+        'utilization': utilization,
+    })
+
+
+@cafe_required
+def cafe_invoice_pdf(request, invoice_id):
+    """Generate PDF invoice kredit untuk kafe."""
+    from io import BytesIO
+    from django.template.loader import get_template
+    from xhtml2pdf import pisa
+
+    invoice = get_object_or_404(
+        CreditInvoice,
+        id=invoice_id,
+        credit_account__cafe=request.user,
+    )
+    template = get_template('cafe/invoice_pdf.html')
+    html = template.render({'invoice': invoice}, request)
+
+    buffer = BytesIO()
+    pisa.CreatePDF(html, dest=buffer, encoding='utf-8')
+    buffer.seek(0)
+
+    filename = f"invoice-{invoice.order.order_number}.pdf"
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
+
+
+@cafe_required
+def cafe_invoice_upload(request, invoice_id):
+    """Kafe upload bukti transfer untuk invoice UNPAID/OVERDUE."""
+    invoice = get_object_or_404(
+        CreditInvoice,
+        id=invoice_id,
+        credit_account__cafe=request.user,
+        status__in=['UNPAID', 'OVERDUE'],
+    )
+
+    if request.method == 'POST':
+        image = request.FILES.get('proof_image')
+        note = request.POST.get('proof_note', '').strip()
+        if not image:
+            messages.error(request, 'File bukti wajib diupload.')
+        else:
+            invoice.upload_proof(image_file=image, note=note)
+            messages.success(request, 'Bukti berhasil diupload. Menunggu verifikasi supplier.')
+            return redirect('/cafe/invoices/')
+
+    return render(request, 'cafe/invoice_upload.html', {'invoice': invoice})

@@ -1,0 +1,29 @@
+{% load catalog_tags %}{% comment %}
+  Kartu produk reusable — seluruh kartu clickable menuju halaman detail.
+  CSS-nya hidup di base_store.html (.pcard*).
+  Konteks:
+    product  — wajib
+    variant  — "sm" untuk grid katalog padat; kosong = ukuran standar (home)
+    delay    — opsional, int → stagger transition-delay reveal (home)
+{% endcomment %}<a href="/produk/{{ product.slug }}/" class="pcard{% if variant == 'sm' %} pcard--sm{% endif %} reveal"{% if delay %} style="transition-delay:{{ delay }}0ms;"{% endif %} aria-label="Lihat detail {{ product.name }}">
+    <div class="pcard-media">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" class="pcard-img" alt="{{ product.name }}">
+        {% else %}
+            <div class="pcard-ph"><i class="fa-solid fa-mug-hot"></i></div>
+        {% endif %}
+        <span class="pcard-flag{% if not product.is_in_stock %} out{% endif %}">{% if product.is_in_stock %}Tersedia{% else %}Stok Habis{% endif %}</span>
+    </div>
+    <div class="pcard-body">
+        <div class="pcard-cat">{% if product.category %}{{ product.category.name }}{% else %}Produk{% endif %}</div>
+        <div class="pcard-name">{{ product.name }}</div>
+        <div class="pcard-meta">
+            <i class="fa-solid fa-box" style="font-size:10px;"></i>
+            Min. {{ product.minimum_order }} {{ product.unit }}
+            {% if product.is_in_stock %}<span>&middot;</span> {{ product.stock }} {{ product.unit }} stok{% endif %}
+        </div>
+    </div>
+    <div class="pcard-foot">
+        <div class="pcard-price">Rp {{ product.price|rupiah }} <span class="u">/ {{ product.unit }}</span></div>
+    </div>
+</a>

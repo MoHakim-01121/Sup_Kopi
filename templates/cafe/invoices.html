@@ -1,0 +1,181 @@
+{% extends 'base_store.html' %}
+{% block title %}Tagihan Kredit — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+/* ── Garis kredit (hero) ────────────────────────── */
+.cl-panel{
+    border:1px solid var(--co-hairline);border-radius:var(--r-md);background:var(--co-canvas);
+    box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;margin-bottom:24px;
+    display:grid;grid-template-columns:minmax(0,1fr) 248px;
+}
+.cl-left{padding:20px 22px;min-width:0;}
+.cl-right{padding:20px 22px;border-left:1px solid var(--co-hairline);background:var(--co-stone);
+    display:flex;flex-direction:column;justify-content:center;gap:4px;}
+
+.cl-lbl{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--co-muted);}
+.cl-avail{font-family:'Space Grotesk',sans-serif;font-size:2.15rem;font-weight:600;letter-spacing:-.03em;color:var(--co-deep-green);line-height:1.04;margin-top:4px;}
+
+.cl-track{height:10px;border-radius:var(--r-xl);background:var(--co-stone);overflow:hidden;margin:16px 0 9px;}
+.cl-panel .cl-right .cl-track{background:#fff;}
+.cl-fill{height:100%;border-radius:var(--r-xl);background:var(--co-deep-green);transition:width .45s cubic-bezier(.2,.8,.2,1);}
+.cl-fill.warn{background:var(--co-amber-dim);}
+.cl-fill.danger{background:var(--co-error);}
+
+.cl-legend{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--co-muted);}
+.cl-legend b{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--co-primary);margin-left:5px;}
+.cl-legend .danger b{color:var(--co-error);}
+
+.cl-terms{display:flex;flex-wrap:wrap;align-items:center;gap:6px 13px;margin-top:14px;font-size:12px;color:var(--co-muted);}
+.cl-terms b{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--co-primary);}
+.cl-terms .sep{width:1px;height:12px;background:var(--co-hairline);}
+
+.cl-due{font-family:'Space Grotesk',sans-serif;font-size:1.55rem;font-weight:600;letter-spacing:-.02em;color:var(--co-primary);line-height:1.05;margin-top:3px;}
+.cl-due.zero{font-size:1.05rem;color:var(--co-deep-green);}
+.cl-count{font-size:12px;color:var(--co-muted);margin-top:1px;}
+.cl-cta{margin-top:12px;justify-content:center;}
+.cl-hint{font-size:11px;color:var(--co-muted);text-align:center;margin-top:7px;line-height:1.4;}
+
+/* ── Daftar tagihan ─────────────────────────────── */
+.inv-group{margin-top:26px;}
+.inv-glabel{display:flex;align-items:baseline;gap:9px;margin-bottom:2px;}
+.inv-glabel .t{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:var(--co-muted);}
+.inv-glabel .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--co-muted);}
+.inv-glabel.danger .t{color:var(--co-error);}
+
+.inv-row{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(150px,auto);
+    grid-template-areas:"main amount actions";gap:16px;align-items:center;
+    padding:13px 0;border-bottom:1px solid var(--co-hairline);}
+.inv-row:last-child{border-bottom:none;}
+
+.inv-main{grid-area:main;min-width:0;}
+.inv-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--co-primary);}
+.inv-meta{font-size:12px;color:var(--co-muted);margin-top:3px;}
+.inv-meta .urgent{color:var(--co-error);font-weight:600;}
+.inv-meta .soon{color:var(--co-amber-text);font-weight:600;}
+
+.inv-amount{grid-area:amount;text-align:right;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--co-primary);}
+
+.inv-actions{grid-area:actions;display:flex;align-items:center;justify-content:flex-end;gap:13px;}
+.inv-pay{font-size:12px;font-weight:600;color:var(--co-coral);text-decoration:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.inv-pay:hover{text-decoration:underline;text-underline-offset:3px;}
+.inv-link{font-size:12px;color:var(--co-muted);text-decoration:none;white-space:nowrap;transition:color .15s;}
+.inv-link:hover{color:var(--co-primary);}
+.inv-wait{font-size:12px;color:var(--co-amber-text);white-space:nowrap;}
+
+.inv-reject{grid-column:1/-1;font-size:12px;color:var(--co-error);margin-top:7px;}
+.inv-reject i{margin-right:5px;}
+
+@media(max-width:640px){
+    .cl-panel{grid-template-columns:1fr;}
+    .cl-right{border-left:none;border-top:1px solid var(--co-hairline);}
+    .inv-row{grid-template-columns:1fr auto;
+        grid-template-areas:"main amount" "actions actions";row-gap:9px;}
+    .inv-amount{align-self:start;}
+    .inv-actions{justify-content:flex-start;flex-wrap:wrap;gap:16px;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="acct-layout">
+{% include 'partials/_account_sidebar.html' with active='invoices' %}
+<div class="acct-main">
+
+    <div class="acct-page-head">
+        <div>
+            <span class="acct-eyebrow">Kredit Dagang</span>
+            <h1 class="acct-h1">Tagihan Kredit</h1>
+        </div>
+    </div>
+
+    {% if overdue_count %}
+    <div class="acct-banner">
+        <span class="ab-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <span class="ab-t">
+            <span class="ab-title">{{ overdue_count }} tagihan telat bayar</span>
+            <span class="ab-sub">Total Rp {{ overdue_total|floatformat:0 }} — lunasi segera supaya kredit tetap aktif.</span>
+        </span>
+    </div>
+    {% endif %}
+
+    <div class="cl-panel">
+        <div class="cl-left">
+            <div class="cl-lbl">Kredit tersedia</div>
+            <div class="cl-avail">Rp {{ credit.available_credit|floatformat:0 }}</div>
+
+            <div class="cl-track">
+                <div class="cl-fill {% if utilization >= 90 %}danger{% elif utilization >= 70 %}warn{% endif %}"
+                     style="width:{% if utilization > 100 %}100{% else %}{{ utilization }}{% endif %}%;"></div>
+            </div>
+            <div class="cl-legend">
+                <span class="{% if credit.outstanding_balance > 0 %}danger{% endif %}">Terpakai<b>Rp {{ credit.outstanding_balance|floatformat:0 }}</b></span>
+                <span>Limit<b>Rp {{ credit.credit_limit|floatformat:0 }}</b></span>
+            </div>
+
+            <div class="cl-terms">
+                <span>Tempo <b>{{ credit.payment_term_days }} hari</b></span>
+                <span class="sep"></span>
+                <span>Status <b>{% if credit.is_enabled %}Aktif{% else %}Nonaktif{% endif %}</b></span>
+            </div>
+        </div>
+
+        <div class="cl-right">
+            <div class="cl-lbl">Perlu dibayar</div>
+            {% if total_due > 0 %}
+                <div class="cl-due">Rp {{ total_due|floatformat:0 }}</div>
+                <div class="cl-count">{{ outstanding_count }} tagihan</div>
+                <a href="/payments/invoice/{{ next_due.id }}/pay-online/" class="acct-btn solid cl-cta">Bayar terdekat</a>
+                <div class="cl-hint">{{ next_due.order.order_number }} — jatuh tempo {{ next_due.due_date|date:'d M Y' }}</div>
+            {% else %}
+                <div class="cl-due zero">Semua tagihan lunas</div>
+                <div class="cl-count">Tidak ada yang jatuh tempo</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if has_any %}
+    {% for group in groups %}
+    <div class="inv-group">
+        <div class="inv-glabel {% if group.tone == 'danger' %}danger{% endif %}">
+            <span class="t">{{ group.label }}</span><span class="n">{{ group.items|length }}</span>
+        </div>
+        {% for inv in group.items %}
+        <div class="inv-row">
+            <div class="inv-main">
+                <span class="inv-num">{{ inv.order.order_number }}</span>
+                <div class="inv-meta">
+                    {% if inv.status == 'PAID' %}Lunas – jatuh tempo {{ inv.due_date|date:'d M Y' }}
+                    {% elif inv.status == 'VERIFYING' %}Bukti dikirim – menunggu konfirmasi
+                    {% elif inv.days_left < 0 %}<span class="urgent">Telat {{ inv.days_left|stringformat:'d'|cut:'-' }} hari</span> – jatuh tempo {{ inv.due_date|date:'d M Y' }}
+                    {% elif inv.days_left == 0 %}<span class="urgent">Jatuh tempo hari ini</span> – {{ inv.due_date|date:'d M Y' }}
+                    {% elif inv.days_left <= 7 %}<span class="soon">{{ inv.days_left }} hari lagi</span> – {{ inv.due_date|date:'d M Y' }}
+                    {% else %}{{ inv.days_left }} hari lagi – {{ inv.due_date|date:'d M Y' }}{% endif %}
+                </div>
+            </div>
+            <div class="inv-amount">Rp {{ inv.amount|floatformat:0 }}</div>
+            <div class="inv-actions">
+                {% if inv.status == 'UNPAID' or inv.status == 'OVERDUE' %}
+                    <a href="/payments/invoice/{{ inv.id }}/pay-online/" class="inv-pay"><i class="fa-solid fa-credit-card" style="font-size:11px;"></i> Bayar</a>
+                    <a href="/cafe/invoices/{{ inv.id }}/upload/" class="inv-link">Transfer</a>
+                    <a href="/cafe/invoices/{{ inv.id }}/pdf/" class="inv-link" target="_blank">PDF</a>
+                {% elif inv.status == 'VERIFYING' %}
+                    <span class="inv-wait">Diverifikasi</span>
+                    <a href="/cafe/invoices/{{ inv.id }}/pdf/" class="inv-link" target="_blank">PDF</a>
+                {% elif inv.status == 'PAID' %}
+                    <a href="/cafe/invoices/{{ inv.id }}/pdf/" class="inv-link" target="_blank">Invoice</a>
+                {% endif %}
+            </div>
+            {% if inv.rejection_reason %}<div class="inv-reject"><i class="fa-solid fa-circle-xmark"></i>Bukti ditolak: {{ inv.rejection_reason }}</div>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="acct-empty" style="margin-top:24px;"><i class="fa-solid fa-file-invoice"></i><h4>Belum ada tagihan</h4><p>Tagihan kredit akan muncul di sini setelah kamu memakai fasilitas kredit.</p></div>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}

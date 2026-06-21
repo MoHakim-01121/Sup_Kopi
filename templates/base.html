@@ -35,13 +35,18 @@
             --co-slate:       #75758a;
             --co-body-muted:  #616161;
 
+            /* Surfaces */
+            --co-bg-surface:  #f7f7f8;
+
             /* Accents */
             --co-blue:        #1863dc;
             --co-focus:       #4c6ee6;
             --co-coral:       #ff7759;
             --co-coral-soft:  #ffad9b;
-            --co-form-focus:  #9b60aa;
+            --co-form-focus:  #1863dc;
             --co-error:       #b30000;
+            --co-error-bg:    #fff1f0;
+            --co-error-border:#fecaca;
 
             /* Interactive states */
             --co-primary-hover: #2d2d35;
@@ -68,7 +73,7 @@
             font-family: 'Inter', 'Arial', system-ui, sans-serif;
             background: var(--co-canvas);
             color: var(--co-ink);
-            font-size: 16px;
+            font-size: 14px;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
@@ -86,17 +91,17 @@
         }
 
         /* ── BUTTONS ── */
-        .btn { font-size: 14px; font-weight: 500; transition: all 0.16s; }
+        .btn { font-size: 13px; font-weight: 500; transition: all 0.14s; }
         .btn:active { transform: scale(0.97); }
-        .btn-sm { padding: 6px 14px; font-size: 13px; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
 
-        /* Primary — near-black pill */
+        /* Primary — near-black rect */
         .btn-primary, .btn-dark, .btn-coffee {
             background: var(--co-primary) !important;
             color: #fff !important;
             border: none !important;
-            border-radius: var(--r-pill) !important;
-            padding: 12px 24px;
+            border-radius: var(--r-sm) !important;
+            padding: 9px 18px;
             font-weight: 500;
         }
         .btn-primary:hover, .btn-dark:hover, .btn-coffee:hover {
@@ -104,26 +109,26 @@
             color: #fff !important;
         }
 
-        /* Outline pill */
+        /* Outline rect */
         .btn-outline-primary, .btn-outline-dark {
             background: transparent !important;
             color: var(--co-primary) !important;
-            border: 1.5px solid var(--co-primary) !important;
-            border-radius: var(--r-pill) !important;
-            padding: 10px 22px;
+            border: 1px solid var(--co-primary) !important;
+            border-radius: var(--r-sm) !important;
+            padding: 8px 16px;
         }
         .btn-outline-primary:hover, .btn-outline-dark:hover {
             background: var(--co-primary) !important;
             color: #fff !important;
         }
 
-        /* Secondary — text link style */
+        /* Secondary */
         .btn-secondary, .btn-outline-secondary {
             background: transparent !important;
             color: var(--co-ink) !important;
-            border: 1.5px solid var(--co-hairline) !important;
+            border: 1px solid var(--co-hairline) !important;
             border-radius: var(--r-xs) !important;
-            padding: 10px 22px;
+            padding: 8px 16px;
         }
         .btn-secondary:hover, .btn-outline-secondary:hover {
             border-color: var(--co-primary) !important;
@@ -136,8 +141,8 @@
             background: var(--co-coral) !important;
             color: #fff !important;
             border: none !important;
-            border-radius: var(--r-pill) !important;
-            padding: 12px 24px;
+            border-radius: var(--r-sm) !important;
+            padding: 9px 18px;
         }
         .btn-amber:hover, .btn-gold:hover { background: #e05c40 !important; }
 
@@ -148,40 +153,40 @@
             background: var(--co-canvas);
             box-shadow: none;
         }
-        .card-body { padding: 24px; }
+        .card-body { padding: 18px; }
 
         /* ── FORMS ── */
         .form-control, .form-select {
             border-radius: var(--r-xs);
             border: 1px solid var(--co-hairline);
-            font-size: 15px; padding: 10px 14px;
+            font-size: 13px; padding: 7px 11px;
             background: var(--co-canvas);
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         .form-control:focus, .form-select:focus {
             border-color: var(--co-form-focus);
-            box-shadow: 0 0 0 3px rgba(155,96,170,0.15);
+            box-shadow: 0 0 0 3px rgba(24,99,220,0.12);
             outline: none;
         }
         .form-label {
-            font-weight: 500; font-size: 14px;
-            color: var(--co-ink); margin-bottom: 6px;
+            font-weight: 500; font-size: 13px;
+            color: var(--co-ink); margin-bottom: 4px;
         }
-        .form-text { font-size: 12px; color: var(--co-muted); }
+        .form-text { font-size: 11px; color: var(--co-muted); }
 
         /* ── TABLES ── */
-        .table { font-size: 14px; margin-bottom: 0; }
+        .table { font-size: 13px; margin-bottom: 0; }
         .table th {
             font-weight: 500; font-size: 11px;
             text-transform: uppercase; letter-spacing: 0.8px;
             color: var(--co-muted); background: var(--co-canvas);
             border-bottom: 1px solid var(--co-hairline);
-            padding: 12px 16px;
+            padding: 8px 16px;
         }
         .table td {
             vertical-align: middle;
             border-color: var(--co-border);
-            padding: 13px 16px; color: var(--co-ink);
+            padding: 9px 16px; color: var(--co-ink);
         }
         .table-hover tbody tr:hover { background: var(--co-stone); }
 

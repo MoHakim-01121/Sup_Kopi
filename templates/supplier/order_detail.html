@@ -1,162 +1,143 @@
 {% extends 'base_supplier.html' %}
 
-{% block title %}Order {{ order.order_number }} – Supplier{% endblock %}
+{% block title %}Order {{ order.order_number }} — Supplier{% endblock %}
 {% block page_title %}Order {{ order.order_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.od-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start;}
+@media(max-width:900px){.od-layout{grid-template-columns:1fr;}}
+.od-item{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--co-hairline);}
+.od-item:first-child{padding-top:0;}
+.od-item:last-child{border-bottom:none;}
+.od-item-name{font-size:13px;font-weight:600;color:var(--co-ink);}
+.od-item-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--co-muted);margin-top:3px;}
+.od-totals{border-top:1px solid var(--co-hairline);margin-top:8px;padding-top:14px;}
+.od-tline{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;}
+.od-tline span:first-child{color:var(--co-muted);}
+.od-tline.grand{font-size:15px;padding-top:10px;border-top:1px solid var(--co-hairline);margin-bottom:0;}
+.od-tline.grand span:last-child{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--co-primary);}
+.od-label{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--co-muted);margin-bottom:4px;}
+.od-val{font-size:13px;color:var(--co-ink);}
+.od-recent a{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--co-hairline);text-decoration:none;font-size:12px;transition:color .12s;}
+.od-recent a:last-child{border-bottom:none;}
+.od-recent a:hover .sd-onum{color:var(--co-coral);}
+</style>
+{% endblock %}
 
 {% block content %}
 
-<!-- Header bar: status + back button -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <span class="badge fs-6
+<div style="margin-bottom:18px;">
+    <a href="/supplier/orders/" class="sd-detail-link"><i class="fa-solid fa-arrow-left" style="font-size:10px;"></i> Kembali ke Kelola Order</a>
+</div>
+
+<div class="sd-intro">
+    <div>
+        <span class="ey">Transaksi</span>
+        <h1>{{ order.order_number }}</h1>
+        <p class="sub">{{ order.created_at|date:"d F Y, H:i" }}</p>
+    </div>
+    <span class="badge
         {% if order.status == 'PENDING' %}badge-pending
         {% elif order.status == 'CONFIRMED' %}badge-confirmed
         {% elif order.status == 'PROCESSING' %}badge-processing
         {% elif order.status == 'SHIPPED' %}badge-shipped
         {% elif order.status == 'DELIVERED' %}badge-delivered
         {% elif order.status == 'CANCELLED' %}badge-cancelled
-        {% endif %}"
-        style="font-size:12px !important; padding:6px 14px;">
+        {% endif %}" style="font-size:12px;padding:6px 14px;">
         {{ order.get_status_display }}
     </span>
-    <a href="/supplier/orders/" class="btn btn-sm btn-outline-secondary">
-        <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i> Kembali
-    </a>
 </div>
 
-<div class="row g-4">
-
-    <!-- Left column: items + delivery -->
-    <div class="col-lg-8">
-
-        <!-- Produk Dipesan -->
-        <div class="section-card mb-3">
-            <div class="section-header">
-                <h5 class="section-title">Produk Dipesan</h5>
-            </div>
-            <div class="section-body">
+<div class="od-layout">
+    <!-- Left -->
+    <div>
+        <div class="sd-card">
+            <div class="sd-card-head"><span class="h-ttl">Produk Dipesan</span></div>
+            <div class="sd-card-body">
                 {% for item in order.items.all %}
-                <div class="d-flex justify-content-between align-items-start py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="od-item">
                     <div>
-                        <div style="font-size:13px; font-weight:600; color:var(--co-ink);">{{ item.product_name }}</div>
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--co-muted);">
-                            {{ item.quantity }} {{ item.product_unit }}
-                        </div>
+                        <div class="od-item-name">{{ item.product_name }}</div>
+                        <div class="od-item-meta">{{ item.quantity }} {{ item.product_unit }} × Rp {{ item.unit_price|floatformat:0 }}</div>
                     </div>
-                    <span style="font-size:13px; font-weight:600; white-space:nowrap;">Rp {{ item.subtotal|floatformat:0 }}</span>
+                    <span class="sd-amount" style="white-space:nowrap;">Rp {{ item.subtotal|floatformat:0 }}</span>
                 </div>
                 {% endfor %}
-                <div style="border-top:1px solid var(--co-hairline); margin-top:12px; padding-top:12px;">
-                    <div class="d-flex justify-content-between mb-1" style="font-size:13px;">
-                        <span style="color:var(--co-muted);">Subtotal</span>
-                        <span>Rp {{ order.subtotal|floatformat:0 }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2" style="font-size:13px;">
-                        <span style="color:var(--co-muted);">Ongkir</span>
-                        <span>Rp {{ order.shipping_cost|floatformat:0 }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between" style="font-size:14px; font-weight:700;">
-                        <span>Total</span>
-                        <span>Rp {{ order.total_amount|floatformat:0 }}</span>
-                    </div>
+                <div class="od-totals">
+                    <div class="od-tline"><span>Subtotal</span><span>Rp {{ order.subtotal|floatformat:0 }}</span></div>
+                    <div class="od-tline"><span>Ongkir</span><span>Rp {{ order.shipping_cost|floatformat:0 }}</span></div>
+                    <div class="od-tline grand"><span>Total</span><span>Rp {{ order.total_amount|floatformat:0 }}</span></div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Pengiriman -->
-        {% if delivery %}
-        <div class="section-card">
-            <div class="section-header">
-                <h5 class="section-title">Informasi Pengiriman</h5>
-            </div>
-            <div class="section-body">
-                <div class="row g-3">
-                    <div class="col-sm-6">
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">Kurir</div>
-                        <div style="font-size:13px; font-weight:600;">{{ delivery.courier_name }}</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">No. Resi</div>
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;">{{ delivery.tracking_number }}</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">Status</div>
-                        <div style="font-size:13px;">{{ delivery.get_status_display }}</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--co-muted); margin-bottom:4px;">Estimasi Tiba</div>
-                        <div style="font-size:13px;">{{ delivery.estimated_delivery_date|date:"d M Y" }}</div>
-                    </div>
-                </div>
+    <!-- Right -->
+    <div>
+        <!-- Ubah status -->
+        {% if order.status != 'DELIVERED' and order.status != 'CANCELLED' %}
+        <div class="sd-card sd-mb">
+            <div class="sd-card-head"><span class="h-ttl">Ubah Status</span></div>
+            <div class="sd-card-body">
+                <form method="post" action="/supplier/orders/{{ order.order_number }}/status/">
+                    {% csrf_token %}
+                    <select name="status" class="form-select" style="margin-bottom:12px;">
+                        {% for val, label in order.STATUS_CHOICES %}
+                        <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="sd-seeall solid" style="width:100%;justify-content:center;">
+                        <i class="fa-solid fa-arrows-rotate" style="font-size:11px;"></i> Perbarui Status
+                    </button>
+                </form>
             </div>
         </div>
         {% endif %}
 
-    </div>
-
-    <!-- Right column: cafe info + actions -->
-    <div class="col-lg-4">
-
-        <!-- Info Kafe -->
-        <div class="section-card mb-3">
-            <div class="section-header">
-                <h5 class="section-title">Info Kafe</h5>
-            </div>
-            <div class="section-body">
-                <div style="font-size:14px; font-weight:600; color:var(--co-primary); margin-bottom:4px;">
-                    {{ order.cafe.cafe_profile.cafe_name|default:"–" }}
-                </div>
-                <div style="font-size:12px; color:var(--co-muted);">{{ order.cafe.email }}</div>
+        <!-- Info kafe -->
+        <div class="sd-card sd-mb">
+            <div class="sd-card-head"><span class="h-ttl">Info Kafe</span></div>
+            <div class="sd-card-body">
+                <div style="font-size:14px;font-weight:600;color:var(--co-primary);margin-bottom:3px;">{{ order.cafe.cafe_profile.cafe_name|default:"–" }}</div>
+                <div class="sd-muted" style="font-size:12px;">{{ order.cafe.email }}</div>
             </div>
         </div>
 
         <!-- Alamat -->
-        <div class="section-card mb-3">
-            <div class="section-header">
-                <h5 class="section-title">Alamat Pengiriman</h5>
-            </div>
-            <div class="section-body">
-                <div style="font-size:13px; font-weight:600; color:var(--co-ink); margin-bottom:4px;">
-                    {{ order.shipping_zone.name }}
-                </div>
-                <div style="font-size:12px; color:var(--co-muted); line-height:1.5;">{{ order.shipping_address }}</div>
+        <div class="sd-card sd-mb">
+            <div class="sd-card-head"><span class="h-ttl">Alamat Pengiriman</span></div>
+            <div class="sd-card-body">
+                {% if order.shipping_zone %}<div class="od-val" style="font-weight:600;margin-bottom:4px;">{{ order.shipping_zone.name }}</div>{% endif %}
+                <div class="sd-muted" style="font-size:12px;line-height:1.6;white-space:pre-line;">{{ order.shipping_address }}</div>
             </div>
         </div>
 
         <!-- Pembayaran -->
         {% if payment %}
-        <div class="section-card mb-3">
-            <div class="section-header">
-                <h5 class="section-title">Pembayaran</h5>
-            </div>
-            <div class="section-body">
-                <span class="badge {% if payment.status == 'PAID' %}badge-delivered{% else %}badge-pending{% endif %}">
-                    {{ payment.status }}
-                </span>
-                {% if payment.payment_type %}
-                <div style="font-size:12px; color:var(--co-muted); margin-top:8px;">Via: {{ payment.payment_type }}</div>
-                {% endif %}
+        <div class="sd-card sd-mb">
+            <div class="sd-card-head"><span class="h-ttl">Pembayaran</span></div>
+            <div class="sd-card-body">
+                <span class="badge {% if payment.status == 'PAID' %}badge-delivered{% else %}badge-pending{% endif %}">{{ payment.status }}</span>
+                {% if payment.payment_type %}<div class="sd-muted" style="font-size:12px;margin-top:8px;">Via: {{ payment.payment_type }}</div>{% endif %}
             </div>
         </div>
         {% endif %}
 
-        <!-- Actions -->
-        <div class="d-flex flex-column gap-2">
-            {% if order.status == 'CONFIRMED' and not delivery %}
-            <a href="/delivery/create/{{ order.order_number }}/" class="btn btn-primary">
-                <i class="fa-solid fa-truck me-1"></i> Input Resi Pengiriman
-            </a>
-            {% endif %}
-            {% if delivery and delivery.status == 'SHIPPED' %}
-            <form method="post" action="/delivery/update/{{ order.order_number }}/">
-                {% csrf_token %}
-                <input type="hidden" name="status" value="DELIVERED">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fa-solid fa-circle-check me-1"></i> Tandai Terkirim
-                </button>
-            </form>
-            {% endif %}
+        <!-- Riwayat kafe -->
+        {% if cafe_orders %}
+        <div class="sd-card">
+            <div class="sd-card-head"><span class="h-ttl">Order Lain Kafe Ini</span></div>
+            <div class="sd-card-body od-recent">
+                {% for o in cafe_orders %}
+                <a href="/supplier/orders/{{ o.order_number }}/">
+                    <span class="sd-onum">{{ o.order_number }}</span>
+                    <span class="sd-mono sd-muted">Rp {{ o.total_amount|floatformat:0 }}</span>
+                </a>
+                {% endfor %}
+            </div>
         </div>
-
+        {% endif %}
     </div>
 </div>
 

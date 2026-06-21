@@ -1,0 +1,95 @@
+{% extends 'base_supplier.html' %}
+{% block title %}Kredit Kafe — Sup Kopi{% endblock %}
+{% block page_title %}Kredit Kafe{% endblock %}
+
+{% block content %}
+
+<!-- Intro -->
+<div class="sd-intro">
+    <div>
+        <span class="ey">Keuangan</span>
+        <h1>Manajemen Kredit Kafe</h1>
+        <p class="sub">Atur fasilitas kredit dagang untuk setiap kafe.</p>
+    </div>
+</div>
+
+<!-- Needs attention -->
+{% if overdue_count or verifying_count %}
+<div class="sd-alerts">
+    {% if verifying_count %}
+    <div class="sd-alert" style="cursor:default;">
+        <i class="fa-solid fa-clock-rotate-left lead" style="color:var(--co-deep-green);"></i>
+        <span class="at">
+            <b>{{ verifying_count }} menunggu verifikasi</b>
+            <span>Bukti transfer perlu dikonfirmasi</span>
+        </span>
+    </div>
+    {% endif %}
+    {% if overdue_count %}
+    <div class="sd-alert" style="cursor:default;">
+        <i class="fa-solid fa-triangle-exclamation lead" style="color:var(--co-error);"></i>
+        <span class="at">
+            <b>{{ overdue_count }} tagihan overdue</b>
+            <span>Sudah melewati jatuh tempo</span>
+        </span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Table -->
+<div class="sd-card">
+    <div class="sd-card-head">
+        <span class="h-ttl">Daftar Kafe</span>
+    </div>
+    <div class="sd-table-wrap">
+        <table class="sd-table">
+            <thead>
+                <tr>
+                    <th>Nama Kafe</th>
+                    <th>Status Kredit</th>
+                    <th>Limit</th>
+                    <th>Outstanding</th>
+                    <th>Tersedia</th>
+                    <th>Term</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cafe in cafes %}
+                {% with credit=cafe.credit_account %}
+                <tr>
+                    <td>
+                        <div style="font-weight:600;color:var(--co-primary);">{{ cafe.cafe_profile.cafe_name|default:cafe.email }}</div>
+                        <div class="sd-muted" style="font-size:11px;">{{ cafe.email }}</div>
+                    </td>
+                    <td>
+                        {% if credit and credit.is_enabled %}
+                            <span class="badge badge-delivered">Aktif</span>
+                        {% else %}
+                            <span class="badge badge-cancelled">Nonaktif</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="sd-mono">{% if credit %}Rp {{ credit.credit_limit|floatformat:0 }}{% else %}—{% endif %}</span></td>
+                    <td>
+                        {% if credit %}
+                            <span class="sd-mono" style="{% if credit.outstanding_balance > 0 %}color:var(--co-error);font-weight:600;{% endif %}">Rp {{ credit.outstanding_balance|floatformat:0 }}</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td><span class="sd-mono">{% if credit %}Rp {{ credit.available_credit|floatformat:0 }}{% else %}—{% endif %}</span></td>
+                    <td><span class="sd-mono sd-muted">{% if credit %}NET {{ credit.payment_term_days }}{% else %}—{% endif %}</span></td>
+                    <td style="text-align:right;">
+                        <a href="/supplier/credits/{{ cafe.id }}/" class="sd-detail-link">
+                            Kelola <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr><td colspan="7"><div class="sd-empty"><i class="fa-solid fa-mug-saucer"></i>Belum ada kafe terdaftar.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

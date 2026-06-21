@@ -39,3 +39,24 @@ class CafeRegistrationForm(UserCreationForm):
             postal_code=self.cleaned_data['postal_code'],
         )
         return user
+
+
+class ProfileEditForm(forms.ModelForm):
+    phone = forms.CharField(max_length=20, required=False)
+
+    class Meta:
+        model = CafeProfile
+        fields = ['cafe_name', 'address', 'city', 'province', 'postal_code']
+        widgets = {'address': forms.Textarea(attrs={'rows': 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['phone'].initial = self.instance.user.phone
+
+    def save(self, commit=True):
+        profile = super().save(commit=commit)
+        if commit:
+            profile.user.phone = self.cleaned_data.get('phone', '')
+            profile.user.save(update_fields=['phone'])
+        return profile

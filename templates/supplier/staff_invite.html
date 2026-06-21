@@ -1,82 +1,88 @@
 {% extends 'base_supplier.html' %}
 
-{% block title %}Undang Staff – Sup Kopi{% endblock %}
+{% block title %}Undang Staff — Sup Kopi{% endblock %}
 {% block page_title %}Undang Staff{% endblock %}
+
+{% block extra_css %}
+<style>
+.si-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start;}
+@media(max-width:900px){.si-layout{grid-template-columns:1fr;}}
+.si-field{margin-bottom:16px;}
+.si-field label{display:block;font-size:12px;font-weight:600;color:var(--co-primary);margin-bottom:6px;}
+.si-hint{font-size:11px;color:var(--co-muted);margin-top:5px;}
+.si-note{margin-top:18px;padding:13px 16px;background:var(--co-bg-surface);border:1px solid var(--co-hairline);border-radius:var(--r-sm);font-size:12px;color:var(--co-muted);line-height:1.5;}
+.si-role + .si-role{margin-top:16px;padding-top:16px;border-top:1px solid var(--co-hairline);}
+.si-role ul{font-size:12px;color:var(--co-muted);margin:8px 0 0;padding-left:16px;line-height:1.8;}
+</style>
+{% endblock %}
 
 {% block content %}
 
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="section-card">
-            <div class="section-header">
-                <h5 class="section-title">Kirim Undangan</h5>
-                <a href="/supplier/staff/" class="btn btn-sm btn-outline-secondary">
-                    <i class="fa-solid fa-arrow-left me-1" style="font-size:11px;"></i> Kembali
-                </a>
-            </div>
-            <div class="section-body">
+<div style="margin-bottom:18px;">
+    <a href="/supplier/staff/" class="sd-detail-link"><i class="fa-solid fa-arrow-left" style="font-size:10px;"></i> Kembali ke Kelola Staff</a>
+</div>
 
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label" style="font-size:13px; font-weight:600;">Email Staff</label>
-                        <input type="email" name="email" class="form-control" required
-                               placeholder="email@staff.com" autofocus>
-                        <div style="font-size:11px; color:var(--co-muted); margin-top:4px;">
-                            Link undangan akan dikirim ke email ini. Berlaku selama 48 jam.
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label" style="font-size:13px; font-weight:600;">Role</label>
-                        <select name="role" class="form-select">
-                            {% for val, label in roles %}
-                            <option value="{{ val }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fa-solid fa-paper-plane me-1"></i> Kirim Undangan
-                    </button>
-                </form>
+<div class="sd-intro">
+    <div>
+        <span class="ey">Tim</span>
+        <h1>Undang Staff</h1>
+        <p class="sub">Kirim undangan untuk menambah anggota tim baru.</p>
+    </div>
+</div>
 
-                <div style="margin-top:20px; padding:14px 16px; background:var(--co-stone);
-                            border-radius:var(--r-xs); font-size:12px; color:var(--co-muted);">
-                    <i class="fa-solid fa-circle-info me-1"></i>
+<div class="si-layout">
+    <!-- Form -->
+    <div class="sd-card">
+        <div class="sd-card-head"><span class="h-ttl">Kirim Undangan</span></div>
+        <div class="sd-card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="si-field">
+                    <label>Email Staff</label>
+                    <input type="email" name="email" class="form-control" required placeholder="email@staff.com" autofocus>
+                    <div class="si-hint">Link undangan akan dikirim ke email ini. Berlaku selama 48 jam.</div>
+                </div>
+                <div class="si-field">
+                    <label>Role</label>
+                    <select name="role" class="form-select">
+                        {% for val, label in roles %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="sd-seeall solid" style="width:100%;justify-content:center;">
+                    <i class="fa-solid fa-paper-plane" style="font-size:11px;"></i> Kirim Undangan
+                </button>
+
+                <div class="si-note">
+                    <i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>
                     Staff akan menerima email berisi link untuk membuat username dan password mereka sendiri.
                 </div>
-
-            </div>
+            </form>
         </div>
     </div>
 
-    <div class="col-lg-5">
-        <div class="section-card">
-            <div class="section-header">
-                <h5 class="section-title">Panduan Role</h5>
+    <!-- Panduan role -->
+    <div class="sd-card">
+        <div class="sd-card-head"><span class="h-ttl">Panduan Role</span></div>
+        <div class="sd-card-body">
+            <div class="si-role">
+                <span class="badge badge-confirmed">Admin Order</span>
+                <ul>
+                    <li>Kelola & konfirmasi order masuk</li>
+                    <li>Kelola daftar produk</li>
+                    <li>Lihat dashboard & analitik</li>
+                    <li>Input & update pengiriman</li>
+                </ul>
             </div>
-            <div class="section-body">
-                <div class="mb-3 pb-3" style="border-bottom:1px solid var(--co-hairline);">
-                    <div style="font-size:13px; font-weight:600; color:var(--co-ink); margin-bottom:6px;">
-                        <span class="badge badge-confirmed me-2">Admin Order</span>
-                    </div>
-                    <ul style="font-size:12px; color:var(--co-muted); margin:0; padding-left:16px; line-height:1.8;">
-                        <li>Kelola & konfirmasi order masuk</li>
-                        <li>Kelola daftar produk</li>
-                        <li>Lihat dashboard & analitik</li>
-                        <li>Input & update pengiriman</li>
-                    </ul>
-                </div>
-                <div>
-                    <div style="font-size:13px; font-weight:600; color:var(--co-ink); margin-bottom:6px;">
-                        <span class="badge badge-processing me-2">Logistik</span>
-                    </div>
-                    <ul style="font-size:12px; color:var(--co-muted); margin:0; padding-left:16px; line-height:1.8;">
-                        <li>Akses khusus halaman Pengiriman</li>
-                        <li>Input resi & update status kirim</li>
-                        <li>Upload foto bukti pengiriman</li>
-                        <li>Tidak bisa kelola order/produk</li>
-                    </ul>
-                </div>
+            <div class="si-role">
+                <span class="badge badge-processing">Logistik</span>
+                <ul>
+                    <li>Akses khusus halaman Pengiriman</li>
+                    <li>Input resi & update status kirim</li>
+                    <li>Upload foto bukti pengiriman</li>
+                    <li>Tidak bisa kelola order/produk</li>
+                </ul>
             </div>
         </div>
     </div>

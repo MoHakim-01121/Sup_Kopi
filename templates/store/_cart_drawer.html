@@ -1,0 +1,57 @@
+<div class="cd-inner" data-count="{{ cart.total_items }}">
+{% if cart.total_items == 0 %}
+    <div class="cd-empty">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <p class="cd-empty-title">Keranjang masih kosong</p>
+        <p class="cd-empty-sub">Tambah produk untuk mulai memesan.</p>
+        <a href="/produk/" class="cd-empty-btn" onclick="closeCartDrawer()">Lihat Produk</a>
+    </div>
+{% else %}
+    <div class="cd-items">
+        {% for item in cart.items.all %}
+        <div class="cd-item" data-item-id="{{ item.id }}">
+            <div class="cd-item-img">
+                {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                {% else %}
+                    <i class="fa-solid fa-mug-hot"></i>
+                {% endif %}
+            </div>
+            <div class="cd-item-main">
+                <div class="cd-item-name">{{ item.product.name }}</div>
+                <div class="cd-item-unit">Rp {{ item.product.price|floatformat:0 }} / {{ item.product.unit }}</div>
+                <div class="cd-item-row">
+                    <div class="cd-stepper"
+                         data-update-url="/cart/update/{{ item.id }}/"
+                         data-min="{{ item.product.minimum_order }}"
+                         data-max="{{ item.product.stock }}">
+                        <button type="button" class="cd-step cd-minus" aria-label="Kurangi">&#8722;</button>
+                        <input type="number" class="cd-qty" value="{{ item.quantity }}"
+                               min="{{ item.product.minimum_order }}" max="{{ item.product.stock }}"
+                               aria-label="Jumlah {{ item.product.name }}">
+                        <button type="button" class="cd-step cd-plus" aria-label="Tambah">&#43;</button>
+                    </div>
+                    <span class="cd-item-sub">Rp {{ item.subtotal|floatformat:0 }}</span>
+                </div>
+            </div>
+            <button type="button" class="cd-remove" data-remove-url="/cart/remove/{{ item.id }}/"
+                    aria-label="Hapus {{ item.product.name }}" title="Hapus">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="cd-footer">
+        <div class="cd-subtotal-row">
+            <span>Subtotal</span>
+            <span class="cd-subtotal-val">Rp {{ cart.subtotal|floatformat:0 }}</span>
+        </div>
+        <p class="cd-shipping-note">Ongkos kirim dihitung di checkout</p>
+        <a href="/cart/checkout/" class="cd-checkout">
+            Checkout <i class="fa-solid fa-arrow-right" style="font-size:11px;"></i>
+        </a>
+        <a href="/cart/" class="cd-viewcart" onclick="closeCartDrawer()">Lihat keranjang lengkap</a>
+    </div>
+{% endif %}
+</div>

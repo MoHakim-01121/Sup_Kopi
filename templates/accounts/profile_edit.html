@@ -1,0 +1,53 @@
+{% extends 'base_store.html' %}
+{% block title %}Edit Profil Kafe — Sup Kopi{% endblock %}
+
+{% block page_css %}
+<style>
+.pe-form{max-width:520px;}
+.pe-field{margin-bottom:14px;}
+.pe-field label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--co-muted);margin-bottom:5px;}
+.pe-field input,.pe-field textarea{width:100%;font-size:13px;padding:7px 11px;border:1px solid var(--co-hairline);border-radius:var(--r-sm);background:var(--co-canvas);color:var(--co-primary);font-family:inherit;}
+.pe-field input:focus,.pe-field textarea:focus{outline:none;border-color:var(--co-deep-green);}
+.pe-actions{display:flex;gap:8px;margin-top:18px;}
+.pe-err{font-size:11px;color:var(--co-error);margin-top:4px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="acct-layout">
+{% include 'partials/_account_sidebar.html' with active='profile' %}
+<div class="acct-main">
+
+    <div class="acct-page-head">
+        <div>
+            <span class="acct-eyebrow">Akun</span>
+            <h1 class="acct-h1">Edit Profil Kafe</h1>
+        </div>
+        <a href="/accounts/profile/" class="acct-ghost-link"><i class="fa-solid fa-arrow-left" style="font-size:11px;"></i> Kembali</a>
+    </div>
+
+    <div class="acct-card">
+        <div class="acct-card-head">
+            <div class="acct-card-ico"><i class="fa-solid fa-store"></i></div>
+            <div class="acct-card-title">Informasi Kafe</div>
+        </div>
+        <div class="acct-card-body" style="padding:16px 18px;">
+            <form method="post" class="pe-form">{% csrf_token %}
+                {% for field in form %}
+                <div class="pe-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for err in field.errors %}<div class="pe-err">{{ err }}</div>{% endfor %}
+                </div>
+                {% endfor %}
+                <div class="pe-actions">
+                    <button type="submit" class="acct-btn solid"><i class="fa-solid fa-check" style="font-size:11px;"></i> Simpan</button>
+                    <a href="/accounts/profile/" class="acct-btn">Batal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

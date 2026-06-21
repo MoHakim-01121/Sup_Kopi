@@ -1,0 +1,131 @@
+{% extends 'base_supplier.html' %}
+{% block title %}Kredit {{ cafe.cafe_profile.cafe_name }} — Sup Kopi{% endblock %}
+{% block page_title %}Detail Kredit Kafe{% endblock %}
+
+{% block extra_css %}
+<style>
+.cd-layout{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start;}
+@media(max-width:900px){.cd-layout{grid-template-columns:1fr;}}
+.cd-field{margin-bottom:16px;}
+.cd-field label{display:block;font-size:12px;font-weight:600;color:var(--co-primary);margin-bottom:6px;}
+.cd-summary{margin-top:18px;padding-top:16px;border-top:1px solid var(--co-hairline);display:flex;flex-direction:column;gap:10px;font-size:13px;}
+.cd-summary .row-l{display:flex;justify-content:space-between;align-items:baseline;}
+.cd-summary .row-l span{color:var(--co-muted);}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:18px;">
+    <a href="/supplier/credits/" class="sd-detail-link"><i class="fa-solid fa-arrow-left" style="font-size:10px;"></i> Kembali ke Daftar Kredit</a>
+</div>
+
+<div class="sd-intro">
+    <div>
+        <span class="ey">Keuangan</span>
+        <h1>{{ cafe.cafe_profile.cafe_name|default:cafe.email }}</h1>
+        <p class="sub">{{ cafe.email }}</p>
+    </div>
+</div>
+
+<div class="cd-layout">
+    <!-- Pengaturan -->
+    <div class="sd-card">
+        <div class="sd-card-head"><span class="h-ttl">Pengaturan Kredit</span></div>
+        <div class="sd-card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+
+                <div class="cd-field">
+                    <label>Credit Limit (Rp)</label>
+                    <input type="number" name="credit_limit" class="form-control" value="{{ credit.credit_limit }}" min="0" step="100000">
+                </div>
+                <div class="cd-field">
+                    <label>Payment Term (hari)</label>
+                    <select name="payment_term_days" class="form-select">
+                        <option value="7"  {% if credit.payment_term_days == 7  %}selected{% endif %}>NET 7</option>
+                        <option value="14" {% if credit.payment_term_days == 14 %}selected{% endif %}>NET 14</option>
+                        <option value="30" {% if credit.payment_term_days == 30 %}selected{% endif %}>NET 30</option>
+                        <option value="45" {% if credit.payment_term_days == 45 %}selected{% endif %}>NET 45</option>
+                        <option value="60" {% if credit.payment_term_days == 60 %}selected{% endif %}>NET 60</option>
+                    </select>
+                </div>
+                <div class="cd-field">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_enabled" id="isEnabled" {% if credit.is_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="isEnabled" style="font-size:13px;font-weight:400;">Aktifkan kredit untuk kafe ini</label>
+                    </div>
+                </div>
+                <button type="submit" class="sd-seeall solid" style="width:100%;justify-content:center;">Simpan Pengaturan</button>
+            </form>
+
+            <div class="cd-summary">
+                <div class="row-l">
+                    <span>Outstanding</span>
+                    <strong class="sd-mono" style="{% if credit.outstanding_balance > 0 %}color:var(--co-error);{% endif %}">Rp {{ credit.outstanding_balance|floatformat:0 }}</strong>
+                </div>
+                <div class="row-l">
+                    <span>Tersedia</span>
+                    <strong class="sd-mono">Rp {{ credit.available_credit|floatformat:0 }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice -->
+    <div class="sd-card">
+        <div class="sd-card-head"><span class="h-ttl">Riwayat Invoice</span></div>
+        <div class="sd-table-wrap">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th>No. Order</th>
+                        <th>Jumlah</th>
+                        <th>Jatuh Tempo</th>
+                        <th>Status</th>
+                        <th>Metode</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr>
+                        <td><a href="/supplier/orders/{{ inv.order.order_number }}/" class="sd-onum">{{ inv.order.order_number }}</a></td>
+                        <td><span class="sd-amount">Rp {{ inv.amount|floatformat:0 }}</span></td>
+                        <td>
+                            <span class="sd-mono sd-muted">{{ inv.due_date|date:'d M Y' }}</span>
+                            {% if inv.is_overdue %}<span style="color:var(--co-error);font-size:11px;"> (lewat)</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if inv.status == 'PAID' %}
+                                <span class="badge badge-delivered">Lunas</span>
+                            {% elif inv.status == 'VERIFYING' %}
+                                <span class="badge badge-pending">Verifikasi</span>
+                            {% elif inv.status == 'OVERDUE' %}
+                                <span class="badge badge-cancelled">Overdue</span>
+                            {% else %}
+                                <span class="badge" style="background:var(--co-stone);color:var(--co-muted);border:1px solid var(--co-hairline);">Belum Bayar</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="sd-muted">{{ inv.get_payment_method_display|default:"—" }}</span></td>
+                        <td style="text-align:right;white-space:nowrap;">
+                            {% if inv.status == 'VERIFYING' %}
+                            <a href="/supplier/credits/invoices/{{ inv.id }}/verify/" class="sd-detail-link" style="color:var(--co-amber-dim);margin-right:12px;">
+                                <i class="fa-solid fa-magnifying-glass" style="font-size:10px;"></i> Review
+                            </a>
+                            {% endif %}
+                            <a href="/cafe/invoices/{{ inv.id }}/pdf/" class="sd-detail-link" target="_blank">
+                                <i class="fa-solid fa-file-pdf" style="font-size:10px;"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="sd-empty"><i class="fa-solid fa-file-invoice"></i>Belum ada invoice.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
