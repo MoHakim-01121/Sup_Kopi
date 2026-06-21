@@ -96,25 +96,49 @@
         font-size: 15px; font-weight: 600;
         color: var(--co-primary); letter-spacing: -0.2px;
     }
+    .topbar-user-wrap { position: relative; }
     .topbar-user {
         display: flex; align-items: center; gap: 8px;
-        padding: 4px 10px; border-radius: var(--r-xs);
+        padding: 5px 14px 5px 8px; border-radius: var(--r-xl);
         background: var(--co-canvas);
-        border: 1px solid var(--co-hairline); cursor: default;
+        border: 1px solid var(--co-hairline); cursor: pointer;
+        transition: border-color .15s, box-shadow .15s;
     }
+    .topbar-user:hover { border-color: var(--co-primary); box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
     .topbar-user .user-avatar {
-        width: 28px; height: 28px; border-radius: var(--r-xs);
+        width: 24px; height: 24px; border-radius: 9999px;
         background: var(--co-deep-green); color: #fff;
         display: flex; align-items: center; justify-content: center;
-        font-size: 12px; font-weight: 700;
-        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; font-weight: 700;
+        font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
     }
-    .topbar-user .user-name { font-size: 13px; font-weight: 600; color: var(--co-ink); }
-    .topbar-user .user-role {
-        font-size: 10px; color: var(--co-muted);
-        font-family: 'JetBrains Mono', monospace;
-        letter-spacing: 0.5px;
+    .topbar-user .user-name { font-size: 13px; font-weight: 500; color: var(--co-ink); }
+    .topbar-dropdown {
+        position: absolute; top: calc(100% + 8px); right: 0;
+        background: var(--co-canvas); border: 1px solid var(--co-hairline);
+        border-radius: var(--r-md); min-width: 210px;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+        z-index: 300; display: none; overflow: hidden;
     }
+    .topbar-dropdown.open { display: block; }
+    .topbar-dropdown .dropdown-header { padding: 12px 16px 10px; border-bottom: 1px solid var(--co-hairline); }
+    .topbar-dropdown .dropdown-header .cafe-label {
+        font-family: 'JetBrains Mono', monospace; font-size: 10px;
+        text-transform: uppercase; letter-spacing: 1px; color: var(--co-muted); display: block;
+    }
+    .topbar-dropdown .dropdown-header .cafe-name { font-size: 14px; font-weight: 600; color: var(--co-primary); margin-top: 2px; }
+    .topbar-dropdown .dropdown-item-custom {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 16px; font-size: 13px; font-weight: 500;
+        color: var(--co-ink); text-decoration: none; transition: background 0.12s;
+    }
+    .topbar-dropdown .dropdown-item-custom i { width: 14px; text-align: center; color: var(--co-muted); font-size: 12px; }
+    .topbar-dropdown .dropdown-item-custom:hover { background: var(--co-pale-green); color: var(--co-deep-green); }
+    .topbar-dropdown .dropdown-item-custom:hover i { color: var(--co-coral); }
+    .topbar-dropdown .dropdown-item-danger { color: var(--co-error) !important; }
+    .topbar-dropdown .dropdown-item-danger i { color: var(--co-error) !important; }
+    .topbar-dropdown .dropdown-item-danger:hover { background: #fff1f0 !important; }
+    .topbar-dropdown .dropdown-divider-custom { border-top: 1px solid var(--co-hairline); margin: 4px 0; }
 
     /* ════════════════════════════════════════
        PAGE CONTENT
@@ -233,6 +257,8 @@
     .sd-search:focus-within { border-color:var(--co-primary); }
     .sd-search i { padding:0 14px; font-size:12px; color:var(--co-muted); flex-shrink:0; }
     .sd-search input { flex:1; border:none; background:transparent; padding:10px 14px 10px 0; font-size:13px; color:var(--co-ink); outline:none; }
+    .sd-search-clear { padding:0 12px; color:var(--co-muted); font-size:12px; flex-shrink:0; display:flex; align-items:center; text-decoration:none; transition:color .15s; }
+    .sd-search-clear:hover { color:var(--co-error); }
     .sd-search input:focus { box-shadow:none !important; }
     .sd-pill { font-size:12px; font-weight:500; color:var(--co-ink); text-decoration:none; padding:7px 14px; border:1px solid var(--co-hairline); border-radius:var(--r-xl); transition:border-color .15s,color .15s,background .15s; white-space:nowrap; cursor:pointer; }
     .sd-pill:hover { border-color:var(--co-primary); color:var(--co-primary); }
@@ -310,32 +336,25 @@
         <nav style="flex:1; padding: 8px 0 20px;">
 
             {% if not user.is_supplier_staff or user.staff_profile.is_admin %}
-            <div class="sidebar-section">Overview</div>
             <a href="/supplier/dashboard/"
                class="sidebar-link {% if request.path == '/supplier/dashboard/' %}active{% endif %}">
                 <i class="fa-solid fa-chart-pie"></i> Dashboard
             </a>
-
-            <div class="sidebar-section">Transaksi</div>
             <a href="/supplier/orders/"
                class="sidebar-link {% if '/supplier/orders' in request.path %}active{% endif %}">
                 <i class="fa-solid fa-box-open"></i> Kelola Order
                 {% if pending_orders_count %}
-                <span style="margin-left:auto; background:var(--co-coral); color:#fff;
-                             font-size:10px; font-weight:700; padding:1px 6px;
-                             border-radius:10px; font-family:'JetBrains Mono',monospace;">
+                <span style="margin-left:auto;background:var(--co-coral);color:#fff;
+                             font-size:10px;font-weight:700;padding:1px 6px;
+                             border-radius:10px;font-family:'JetBrains Mono',monospace;">
                     {{ pending_orders_count }}
                 </span>
                 {% endif %}
             </a>
-
-            <div class="sidebar-section">Katalog</div>
             <a href="/supplier/products/"
                class="sidebar-link {% if '/supplier/products' in request.path %}active{% endif %}">
                 <i class="fa-solid fa-bag-shopping"></i> Daftar Produk
             </a>
-
-            <div class="sidebar-section">Keuangan</div>
             <a href="/supplier/credits/"
                class="sidebar-link {% if '/supplier/credits' in request.path %}active{% endif %}">
                 <i class="fa-solid fa-file-invoice-dollar"></i> Kredit Kafe
@@ -349,21 +368,14 @@
             </a>
             {% endif %}
 
-            <hr class="sidebar-divider">
-
             {% if user.is_supplier %}
+            <hr class="sidebar-divider">
             <a href="/supplier/staff/"
                class="sidebar-link {% if '/supplier/staff' in request.path %}active{% endif %}">
                 <i class="fa-solid fa-users"></i> Kelola Staff
             </a>
-            <a href="/admin/" class="sidebar-link" target="_blank" rel="noopener">
-                <i class="fa-solid fa-screwdriver-wrench"></i> Admin Panel
-            </a>
             {% endif %}
 
-            <a href="/accounts/logout/" class="sidebar-link sidebar-link-danger">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
-            </a>
         </nav>
     </aside>
 
@@ -371,11 +383,20 @@
     <div class="main-content">
         <header class="topbar">
             <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
-            <div class="topbar-user">
-                <div class="user-avatar">{{ user.username|first|upper }}</div>
-                <div>
-                    <div class="user-name">{{ user.username }}</div>
-                    <div class="user-role">Supplier</div>
+            <div class="topbar-user-wrap">
+                <button class="topbar-user" id="topbarUserBtn" type="button">
+                    <div class="user-avatar">{{ user.username|first|upper }}</div>
+                    <span class="user-name">{{ user.username }}</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--co-muted);"></i>
+                </button>
+                <div class="topbar-dropdown" id="topbarDropdown">
+                    <div class="dropdown-header">
+                        <span class="cafe-label">Akun Supplier</span>
+                        <div class="cafe-name">{{ user.username }}</div>
+                    </div>
+                    <a href="/" class="dropdown-item-custom"><i class="fa-solid fa-store"></i> Lihat Toko</a>
+                    <div class="dropdown-divider-custom"></div>
+                    <a href="/accounts/logout/" class="dropdown-item-custom dropdown-item-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
                 </div>
             </div>
         </header>
@@ -422,6 +443,18 @@
         if (d) {
             d.querySelectorAll('[data-msg]').forEach(function(el){
                 window.showToast(el.getAttribute('data-msg'), el.getAttribute('data-type') || 'info');
+            });
+        }
+
+        var btn  = document.getElementById('topbarUserBtn');
+        var drop = document.getElementById('topbarDropdown');
+        if (btn && drop) {
+            btn.addEventListener('click', function(e){
+                e.stopPropagation();
+                drop.classList.toggle('open');
+            });
+            document.addEventListener('click', function(){
+                drop.classList.remove('open');
             });
         }
     });

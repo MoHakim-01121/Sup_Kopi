@@ -31,7 +31,6 @@
 
     /* ── FILTER SIDEBAR ── */
     .filter-sidebar {
-        position: sticky; top: 72px;
         border: 1px solid var(--co-hairline);
         border-radius: var(--r-md); overflow: hidden;
         background: var(--co-canvas);
@@ -563,6 +562,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
 (function(){
     /* Staggered reveal for product cards */

@@ -73,11 +73,7 @@
         font-size: clamp(2.4rem, 5.5vw, 4.2rem);
         font-weight: 500; letter-spacing: -0.045em; line-height: 0.98; color: #fff; margin: 0 0 22px;
     }
-    .hero-h1 em { font-style: normal; position: relative; color: var(--co-coral-soft); }
-    .hero-h1 em::after {
-        content: ''; position: absolute; left: 0; right: 0; bottom: 0.08em; height: 0.08em;
-        background: var(--co-coral); opacity: 0.45; border-radius: 2px;
-    }
+    .hero-h1 em { font-style: normal; color: var(--co-coral-soft); }
     .hero-sub { font-size: 16px; color: rgba(255,255,255,0.65); line-height: 1.65; max-width: 420px; margin: 0 0 30px; }
     .hero-search { width: 100%; max-width: 520px; margin: 0 0 22px; }
     .hero-search-inner {
@@ -143,7 +139,7 @@
     .cat-sec { padding: 56px 0 12px; background: var(--co-canvas); }
     .cat-rail {
         display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 18px;
-        scroll-snap-type: x mandatory;
+        scroll-snap-type: x mandatory; justify-content: center;
         scrollbar-width: none; -ms-overflow-style: none;
     }
     .cat-rail::-webkit-scrollbar { display: none; }
@@ -286,7 +282,7 @@
             <a href="/produk/" class="see-all">Semua produk <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></a>
         </div>
         <div class="cat-rail">
-            {% for cat in categories %}
+            {% for cat in categories|slice:":6" %}
             <a href="/produk/?category={{ cat.slug }}" class="cat-card reveal" style="transition-delay:{{ forloop.counter0 }}0ms;">
                 <div class="cat-icon"><i class="fa-solid fa-mug-hot"></i></div>
                 <div class="cat-name">{{ cat.name }}</div>

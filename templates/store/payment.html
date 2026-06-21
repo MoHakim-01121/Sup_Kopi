@@ -313,6 +313,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 {% if is_production %}
 <script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ client_key }}"></script>
 {% else %}

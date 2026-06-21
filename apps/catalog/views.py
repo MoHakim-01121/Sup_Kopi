@@ -22,7 +22,7 @@ def home(request):
         Product.objects
         .filter(is_active=True)
         .select_related('category')
-        .order_by('-created_at')[:8]
+        .order_by('-created_at')[:10]
     )
     total_products = Product.objects.filter(is_active=True).count()
 

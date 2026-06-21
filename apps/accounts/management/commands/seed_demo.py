@@ -62,14 +62,38 @@ PRODUCTS = [
     ("Peralatan", "Milk Jug 600ml", 95000, "pcs", 1, 40, "Pitcher susu stainless 600ml untuk latte art."),
 ]
 
-# Kata kunci foto themed per kategori (untuk loremflickr.com).
+# Kata kunci foto per produk (bahasa Inggris untuk loremflickr.com).
+PRODUCT_IMAGE_KEYWORDS = {
+    "Biji Kopi Arabika Gayo Premium": "arabica,coffee,beans",
+    "Biji Kopi Robusta Lampung":      "robusta,coffee,beans",
+    "Biji Kopi Arabika Toraja":       "coffee,beans,roasted",
+    "House Blend Espresso":           "espresso,coffee,blend",
+    "Susu UHT Full Cream 1L (12 pcs)": "milk,carton,dairy",
+    "Whipping Cream 1L":              "whipping,cream,dairy",
+    "Oat Milk Barista 1L":            "oat,milk,barista",
+    "Susu Evaporasi 410ml (24 pcs)":  "evaporated,milk,can",
+    "Sirup Vanilla 1L":               "vanilla,syrup,bottle",
+    "Sirup Caramel 1L":               "caramel,syrup,bottle",
+    "Sirup Hazelnut 1L":              "hazelnut,syrup,bottle",
+    "Saus Cokelat 1kg":               "chocolate,sauce,bottle",
+    "Teh Hitam Premium 500g":         "black,tea,leaves",
+    "Matcha Powder Grade A 1kg":      "matcha,powder,green",
+    "Paper Cup 12oz (1000 pcs)":      "paper,cup,coffee",
+    "Paper Cup 16oz (1000 pcs)":      "paper,cup,large",
+    "Lid Dome 90mm (1000 pcs)":       "coffee,lid,plastic",
+    "Paper Straw (2500 pcs)":         "paper,straw,eco",
+    "Tamper Stainless 58mm":          "coffee,tamper,barista",
+    "Milk Jug 600ml":                 "milk,jug,latte,art",
+}
+
+# Fallback per kategori jika produk tidak ada di dict di atas.
 CATEGORY_IMAGE_KEYWORDS = {
-    "Biji Kopi": "coffee,beans",
+    "Biji Kopi":    "coffee,beans",
     "Susu & Dairy": "milk,dairy",
     "Sirup & Saus": "syrup,bottle",
-    "Teh": "tea,leaves",
-    "Packaging": "coffee,cup,paper",
-    "Peralatan": "barista,coffee,tools",
+    "Teh":          "tea,leaves",
+    "Packaging":    "coffee,cup,paper",
+    "Peralatan":    "barista,coffee,tools",
 }
 
 # (nama, deskripsi area, ongkir, hari_min, hari_max)
@@ -96,20 +120,20 @@ class Command(BaseCommand):
             help="Lewati pembuatan foto produk (berguna saat offline).",
         )
 
-    @transaction.atomic
     def handle(self, *args, **options):
-        if options["flush_demo"]:
-            self._flush_demo()
+        with transaction.atomic():
+            if options["flush_demo"]:
+                self._flush_demo()
 
-        cats = self._seed_categories()
-        products = self._seed_products(cats)
-        if not options["skip_images"]:
-            self._seed_images(products)
-        zones = self._seed_zones()
-        supplier, cafes = self._seed_users()
-        self._seed_credit(cafes)
-        self._seed_orders(cafes, products, zones)
-        self._seed_credit_invoices(cafes, products, zones)
+            cats = self._seed_categories()
+            products = self._seed_products(cats)
+            if not options["skip_images"]:
+                self._seed_images(products)
+            zones = self._seed_zones()
+            supplier, cafes = self._seed_users()
+            self._seed_credit(cafes)
+            self._seed_orders(cafes, products, zones)
+            self._seed_credit_invoices(cafes, products, zones)
 
         self._summary(supplier, cafes, products, zones)
 
@@ -152,59 +176,114 @@ class Command(BaseCommand):
             if product.image:
                 skipped += 1
                 continue
-            keywords = CATEGORY_IMAGE_KEYWORDS.get(
-                product.category.name if product.category else "", "coffee"
+            keywords = PRODUCT_IMAGE_KEYWORDS.get(
+                product.name,
+                CATEGORY_IMAGE_KEYWORDS.get(
+                    product.category.name if product.category else "", "coffee"
+                ),
             )
             data = self._fetch_photo(keywords, lock) or self._placeholder(product)
             product.image.save(f"{product.slug}.jpg", ContentFile(data), save=True)
             attached += 1
-        msg = f"  • {attached} foto produk dibuat"
+        msg = f"  - {attached} foto produk dibuat"
         if skipped:
-            msg += f" ({skipped} sudah punya foto — dilewati)"
+            msg += f" ({skipped} sudah punya foto - dilewati)"
         self.stdout.write(msg)
 
     def _fetch_photo(self, keywords, lock):
-        """Foto themed dari loremflickr (deterministik via lock). None bila gagal."""
-        url = f"https://loremflickr.com/600/600/{keywords}?lock={lock}"
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "seed-demo"})
-            with urllib.request.urlopen(req, timeout=12) as resp:
-                if resp.status == 200:
-                    return resp.read()
-        except Exception as exc:  # offline / timeout / HTTP error → fallback
-            self.stdout.write(self.style.WARNING(f"    foto online gagal ({exc}) — pakai placeholder"))
+        """Ambil foto dari Unsplash (keyword-based), fallback ke picsum jika gagal."""
+        # Unsplash source: keyword sebagai query, lock sebagai seed deterministik
+        kw_plus = keywords.replace(",", "+")
+        for url in [
+            f"https://source.unsplash.com/600x600/?{kw_plus}&sig={lock}",
+            f"https://loremflickr.com/600/600/{keywords}?lock={lock}",
+            f"https://picsum.photos/seed/{lock}/600/600",
+        ]:
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "seed-demo"})
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    if resp.status == 200:
+                        return resp.read()
+            except Exception as exc:
+                self.stdout.write(self.style.WARNING(f"    gagal ({exc}) coba fallback..."))
         return None
 
     def _placeholder(self, product):
-        """Placeholder offline: panel warna kategori + nama produk."""
-        from PIL import Image, ImageDraw
+        """Placeholder lokal: gradient kategori + nama produk terbaca jelas."""
+        import os
+        from PIL import Image, ImageDraw, ImageFont
 
-        palette = {
-            "Biji Kopi": (78, 52, 36), "Susu & Dairy": (224, 215, 200),
-            "Sirup & Saus": (140, 78, 54), "Teh": (96, 116, 74),
-            "Packaging": (150, 140, 128), "Peralatan": (70, 74, 82),
+        # (warna_atas, warna_bawah, warna_teks, warna_aksen)
+        schemes = {
+            "Biji Kopi":    ((55, 32, 18), (95, 62, 38), (245, 225, 195), (196, 148, 96)),
+            "Susu & Dairy": ((195, 180, 160), (235, 225, 210), (55, 45, 35), (160, 130, 95)),
+            "Sirup & Saus": ((100, 50, 28), (155, 88, 55), (250, 230, 200), (230, 155, 80)),
+            "Teh":          ((38, 60, 32), (72, 105, 60), (215, 240, 190), (140, 200, 90)),
+            "Packaging":    ((65, 58, 50), (110, 100, 88), (240, 232, 220), (195, 178, 155)),
+            "Peralatan":    ((28, 33, 42), (55, 65, 80), (210, 225, 245), (120, 155, 195)),
         }
         cat_name = product.category.name if product.category else ""
-        bg = palette.get(cat_name, (60, 60, 66))
-        fg = (250, 248, 244) if sum(bg) < 480 else (40, 36, 32)
+        top, bot, fg, accent = schemes.get(cat_name, ((45, 45, 52), (75, 75, 85), (235, 232, 228), (160, 155, 148)))
 
-        img = Image.new("RGB", (600, 600), bg)
+        SIZE = 600
+        img = Image.new("RGB", (SIZE, SIZE))
         draw = ImageDraw.Draw(img)
+
+        # Gradient vertikal atas → bawah
+        for y in range(SIZE):
+            t = y / (SIZE - 1)
+            r = int(top[0] + (bot[0] - top[0]) * t)
+            g = int(top[1] + (bot[1] - top[1]) * t)
+            b = int(top[2] + (bot[2] - top[2]) * t)
+            draw.line([(0, y), (SIZE, y)], fill=(r, g, b))
+
+        # Strip aksen bawah
+        draw.rectangle([0, SIZE - 8, SIZE, SIZE], fill=accent)
+
+        # Lingkaran dekoratif besar di tengah atas
+        cx, cy, r = SIZE // 2, 210, 130
+        circ_col = tuple(min(255, c + 20) for c in bot)
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=circ_col)
+        draw.ellipse([cx - r + 4, cy - r + 4, cx + r - 4, cy + r - 4], outline=accent, width=2)
+
+        # Cari font sistem Windows
+        font_big = font_cat = None
+        for fp in ["C:/Windows/Fonts/segoeui.ttf", "C:/Windows/Fonts/calibri.ttf", "C:/Windows/Fonts/arial.ttf"]:
+            if os.path.exists(fp):
+                try:
+                    font_big = ImageFont.truetype(fp, 36)
+                    font_cat = ImageFont.truetype(fp, 18)
+                    break
+                except Exception:
+                    pass
+
+        # Label kategori (kecil, di atas)
+        if font_cat and cat_name:
+            draw.text((SIZE // 2, 60), cat_name.upper(), fill=accent, font=font_cat, anchor="mm")
+
+        # Nama produk — wrap di ~16 karakter lalu rata tengah
         words, line, lines = product.name.split(), "", []
         for w in words:
             trial = f"{line} {w}".strip()
-            if len(trial) > 18:
+            if len(trial) > 16 and line:
                 lines.append(line)
                 line = w
             else:
                 line = trial
-        lines.append(line)
-        y = 300 - len(lines) * 14
+        if line:
+            lines.append(line)
+
+        line_h = 44 if font_big else 28
+        text_y = 370 - (len(lines) * line_h) // 2
         for ln in lines:
-            draw.text((40, y), ln, fill=fg)
-            y += 28
+            if font_big:
+                draw.text((SIZE // 2, text_y), ln, fill=fg, font=font_big, anchor="mm")
+            else:
+                draw.text((SIZE // 2 - len(ln) * 4, text_y), ln, fill=fg)
+            text_y += line_h
+
         buf = BytesIO()
-        img.save(buf, format="JPEG", quality=85)
+        img.save(buf, format="JPEG", quality=88)
         return buf.getvalue()
 
     def _seed_zones(self):
@@ -429,7 +508,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  kafe2        kafe2@supkopi.test     Janji Jiwa — kredit aktif TAPI ada tagihan OVERDUE")
         self.stdout.write(f"  kafe3        kafe3@supkopi.test     Fore Coffee — tanpa kredit (online only)")
         self.stdout.write("\nUji cepat:")
-        self.stdout.write("  • Login kafe1 → checkout → pilih 'Bayar Nanti (Kredit)' (sukses)")
-        self.stdout.write("  • Login kafe2 → checkout → pilih kredit (ditolak: ada tagihan jatuh tempo)")
-        self.stdout.write("  • Login kafe1 → /cafe/invoices/ → lihat UNPAID / PAID / utilisasi")
-        self.stdout.write("  • Login kafe1 → /orders/ → order PENDING punya tombol 'Bayar Sekarang'")
+        self.stdout.write("  - Login kafe1 -> checkout -> pilih 'Bayar Nanti (Kredit)' (sukses)")
+        self.stdout.write("  - Login kafe2 -> checkout -> pilih kredit (ditolak: ada tagihan jatuh tempo)")
+        self.stdout.write("  - Login kafe1 -> /cafe/invoices/ -> lihat UNPAID / PAID / utilisasi")
+        self.stdout.write("  - Login kafe1 -> /orders/ -> order PENDING punya tombol 'Bayar Sekarang'")

@@ -347,7 +347,7 @@
     /* ════════════════════════════════════════
        SUMMARY CARD (cart / checkout sidebar)
     ════════════════════════════════════════ */
-    .summary-card { background:var(--co-canvas); border:1px solid var(--co-hairline); border-radius:var(--r-md); overflow:hidden; position:sticky; top:80px; box-shadow:0 8px 28px rgba(0,60,51,0.06); }
+    .summary-card { background:var(--co-canvas); border:1px solid var(--co-hairline); border-radius:var(--r-md); overflow:hidden; box-shadow:0 8px 28px rgba(0,60,51,0.06); }
     .summary-body { padding:16px 20px; }
     .summary-divider { border:none; border-top:1px solid var(--co-hairline); margin:12px 0; }
 
@@ -463,7 +463,7 @@
     .pcard:hover { border-color: var(--co-deep-green); transform: translateY(-4px); box-shadow: 0 16px 34px rgba(0,60,51,0.1); text-decoration: none; color: inherit; }
     .pcard:focus-visible { outline: 2px solid var(--co-coral); outline-offset: -2px; }
     .pcard-media { position: relative; overflow: hidden; height: 184px; background: var(--co-stone); }
-    .pcard-img { height: 100%; width: 100%; object-fit: cover; display: block; transition: transform 0.5s cubic-bezier(.2,.8,.2,1); }
+    .pcard-img { position: absolute; inset: 0; height: 100%; width: 100%; object-fit: cover; display: block; transition: transform 0.5s cubic-bezier(.2,.8,.2,1); }
     .pcard:hover .pcard-img { transform: scale(1.06); }
     .pcard-ph { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: var(--co-muted); opacity: 0.35; }
     .pcard-flag {
@@ -711,6 +711,16 @@
         document.addEventListener('click', () => {
             dropMenu.classList.remove('show');
             dropBtn && dropBtn.setAttribute('aria-expanded', false);
+        });
+    }
+    const cartNavBtn = document.getElementById('cartNavBtn');
+    if (cartNavBtn) {
+        cartNavBtn.addEventListener('click', function(e) {
+            const drawer = document.getElementById('cartDrawer');
+            if (drawer && window.openCartDrawer) {
+                e.preventDefault();
+                window.openCartDrawer();
+            }
         });
     }
 </script>

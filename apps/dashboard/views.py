@@ -202,8 +202,23 @@ def export_orders_csv(request):
 
 @supplier_admin_required
 def product_management(request):
-    products = Product.objects.select_related('category').order_by('-created_at')
-    return render(request, 'supplier/product_management.html', {'products': products})
+    q = request.GET.get('q', '').strip()
+    category_id = request.GET.get('category', '').strip()
+    qs = Product.objects.select_related('category').order_by('-created_at')
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(description__icontains=q))
+    if category_id:
+        qs = qs.filter(category_id=category_id)
+    paginator = Paginator(qs, PAGE_SIZE)
+    page = paginator.get_page(request.GET.get('page'))
+    categories = Category.objects.all()
+    return render(request, 'supplier/product_management.html', {
+        'products': page,
+        'page_obj': page,
+        'q': q,
+        'category_id': category_id,
+        'categories': categories,
+    })
 
 
 @supplier_admin_required

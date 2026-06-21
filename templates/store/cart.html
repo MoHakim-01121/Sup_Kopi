@@ -344,6 +344,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
 (function () {
     document.querySelectorAll('.cart-item-qty-form').forEach(function (form) {

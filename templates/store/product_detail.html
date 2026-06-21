@@ -5,6 +5,18 @@
 
 {% block page_css %}
 <style>
+/* ── Back button ─────────────────────────────────────── */
+.pd-back-btn{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:13px;font-weight:500;color:var(--co-muted);
+    text-decoration:none;margin-bottom:16px;
+    padding:6px 0;
+    transition:color .15s;
+    max-width:860px;margin-left:auto;margin-right:auto;display:flex;
+}
+.pd-back-btn:hover{color:var(--co-primary);}
+.pd-back-btn i{font-size:11px;}
+
 /* ── Breadcrumb ──────────────────────────────────────── */
 .co-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--co-muted);margin-bottom:32px;flex-wrap:wrap;}
 .co-breadcrumb a{color:var(--co-muted);text-decoration:none;transition:color .15s;}
@@ -32,9 +44,9 @@
     aspect-ratio:1;
     max-height:440px;
     width:100%;
-    display:flex;align-items:center;justify-content:center;
+    position:relative;
 }
-.pd-image-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.8,.2,1);}
+.pd-image-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.8,.2,1);}
 .pd-image-wrap:hover img{transform:scale(1.04);}
 .pd-image-placeholder{font-size:5rem;color:var(--co-muted);opacity:.22;}
 
@@ -345,6 +357,12 @@
 {% endblock %}
 
 {% block content %}
+<!-- Back button -->
+<a href="javascript:history.length>1?history.back():window.location='/produk/'"
+   class="pd-back-btn">
+    <i class="fa-solid fa-arrow-left"></i> Kembali
+</a>
+
 <!-- Breadcrumb -->
 <nav class="co-breadcrumb" aria-label="Breadcrumb">
     <a href="/">Home</a>
@@ -681,6 +699,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
 function openLoginModal() {
     document.getElementById('loginModalOverlay').classList.add('active');

@@ -68,9 +68,8 @@
     }
     .summary-item {
         display: flex; justify-content: space-between; align-items: flex-start;
-        padding: 8px 0; border-bottom: 1px solid var(--co-hairline); gap: 12px;
+        padding: 8px 0; gap: 12px;
     }
-    .summary-item:last-child { border-bottom: none; }
     .summary-item .item-name { font-size: 13px; color: var(--co-ink); flex: 1; }
     .summary-item .item-qty {
         font-family: 'JetBrains Mono', monospace;
@@ -303,6 +302,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
 (function () {
     var btn      = document.getElementById('confirmBtn');

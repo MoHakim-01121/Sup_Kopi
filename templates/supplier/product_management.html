@@ -5,6 +5,26 @@
 
 {% block content %}
 
+<style>
+/* Sidebar tidak fixed di halaman ini — ikut scroll */
+div:has(> .sidebar) {
+    display: flex !important;
+    align-items: flex-start !important;
+}
+.sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    flex-shrink: 0 !important;
+}
+.main-content {
+    margin-left: 0 !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+</style>
+
 <!-- Intro -->
 <div class="sd-intro">
     <div>
@@ -16,6 +36,32 @@
         <i class="fa-solid fa-plus" style="font-size:11px;"></i> Tambah Produk
     </a>
 </div>
+
+<!-- Search -->
+<form method="get" action="/supplier/products/" class="sd-toolbar">
+    {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+    <div class="sd-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" name="q" value="{{ q }}" placeholder="Cari nama produk...">
+        {% if q %}
+        <a href="/supplier/products/{% if category_id %}?category={{ category_id }}{% endif %}" class="sd-search-clear" title="Hapus pencarian"><i class="fa-solid fa-xmark"></i></a>
+        {% endif %}
+    </div>
+    <button type="submit" class="sd-pill active" style="border:none;align-self:stretch;padding-left:24px;padding-right:24px;">Cari</button>
+</form>
+
+<!-- Category filter pills -->
+{% if categories %}
+<div class="sd-toolbar">
+    <span class="sd-filter-label">Kategori</span>
+    <a href="/supplier/products/{% if q %}?q={{ q }}{% endif %}"
+       class="sd-pill {% if not category_id %}active{% endif %}">Semua</a>
+    {% for cat in categories %}
+    <a href="/supplier/products/?category={{ cat.id }}{% if q %}&q={{ q }}{% endif %}"
+       class="sd-pill {% if category_id == cat.id|stringformat:"s" %}active{% endif %}">{{ cat.name }}</a>
+    {% endfor %}
+</div>
+{% endif %}
 
 <!-- Products table -->
 <div class="sd-card">
@@ -37,7 +83,7 @@
                     <td style="font-weight:600;color:var(--co-primary);">{{ product.name }}</td>
                     <td><span class="sd-muted">{{ product.category.name|default:"–" }}</span></td>
                     <td>
-                        <span class="sd-mono">Rp {{ product.price|floatformat:0 }}</span>
+                        <span class="sd-amount">Rp {{ product.price|floatformat:0 }}</span>
                         <span class="sd-mono sd-muted">/ {{ product.unit }}</span>
                     </td>
                     <td>
@@ -65,7 +111,11 @@
                     <td colspan="6">
                         <div class="sd-empty">
                             <i class="fa-solid fa-bag-shopping"></i>
-                            Belum ada produk. <a href="/supplier/products/add/" style="color:var(--co-primary);">Tambah sekarang</a>
+                            {% if q or category_id %}
+                                Produk tidak ditemukan.
+                            {% else %}
+                                Belum ada produk. <a href="/supplier/products/add/" style="color:var(--co-primary);">Tambah sekarang</a>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -73,6 +123,29 @@
             </tbody>
         </table>
     </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="sd-pagination" style="justify-content:center;gap:.4rem;padding:16px;">
+        {% if page_obj.has_previous %}
+        <a href="?{% if q %}q={{ q }}&{% endif %}{% if category_id %}category={{ category_id }}&{% endif %}page={{ page_obj.previous_page_number }}" class="sd-pill" style="padding:6px 10px;">‹</a>
+        {% else %}
+        <span class="sd-pill" style="padding:6px 10px;opacity:.4;pointer-events:none;">‹</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+            <span class="sd-pill active" style="padding:6px 12px;">{{ num }}</span>
+            {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+            <a href="?{% if q %}q={{ q }}&{% endif %}{% if category_id %}category={{ category_id }}&{% endif %}page={{ num }}" class="sd-pill" style="padding:6px 12px;">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?{% if q %}q={{ q }}&{% endif %}{% if category_id %}category={{ category_id }}&{% endif %}page={{ page_obj.next_page_number }}" class="sd-pill" style="padding:6px 10px;">›</a>
+        {% else %}
+        <span class="sd-pill" style="padding:6px 10px;opacity:.4;pointer-events:none;">›</span>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}
