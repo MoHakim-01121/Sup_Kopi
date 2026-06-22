@@ -241,7 +241,7 @@ def supplier_login(request):
         user = authenticate(request, username=username, password=password)
 
         if user and user.is_any_supplier:
-            if _is_trusted_device(request, user):
+            if getattr(django_settings, 'DEMO_MODE', False) or _is_trusted_device(request, user):
                 login(request, user, backend=BACKEND)
                 messages.success(request, f'Selamat datang kembali, {user.username}!')
                 return redirect('/supplier/dashboard/')

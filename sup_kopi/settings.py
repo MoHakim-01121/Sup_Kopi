@@ -159,6 +159,7 @@ LOGOUT_REDIRECT_URL = 'accounts/login/'
 
 
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
+DEMO_MODE = config('DEMO_MODE', default=False, cast=bool)
 
 # Midtrans keys diambil dari environment variable
 MIDTRANS_SERVER_KEY = config('MIDTRANS_SERVER_KEY')
