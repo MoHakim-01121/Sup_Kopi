@@ -517,20 +517,30 @@ def cafe_invoice_pdf(request, invoice_id):
     """Generate PDF invoice kredit untuk kafe."""
     from io import BytesIO
     from django.template.loader import get_template
-    from xhtml2pdf import pisa
 
     invoice = get_object_or_404(
         CreditInvoice,
         id=invoice_id,
         credit_account__cafe=request.user,
     )
+
+    try:
+        from xhtml2pdf import pisa
+    except ImportError:
+        messages.error(request, 'PDF tidak tersedia saat ini (library tidak terinstall di server).')
+        return redirect(f'/cafe/invoices/{invoice_id}/')
+
     template = get_template('cafe/invoice_pdf.html')
     html = template.render({'invoice': invoice}, request)
 
     buffer = BytesIO()
-    pisa.CreatePDF(html, dest=buffer, encoding='utf-8')
-    buffer.seek(0)
+    result = pisa.CreatePDF(html, dest=buffer, encoding='utf-8')
 
+    if result.err:
+        messages.error(request, 'Gagal membuat PDF. Silakan coba lagi.')
+        return redirect(f'/cafe/invoices/{invoice_id}/')
+
+    buffer.seek(0)
     filename = f"invoice-{invoice.order.order_number}.pdf"
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{filename}"'
