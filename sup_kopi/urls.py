@@ -10,6 +10,10 @@ class _SuperuserOnlyAdminSite(admin.AdminSite):
     def has_permission(self, request):
         return request.user.is_active and request.user.is_superuser
 
+    def login(self, request, extra_context=None):
+        from django.shortcuts import render
+        return render(request, '403.html', status=403)
+
 
 admin.site.__class__ = _SuperuserOnlyAdminSite
 

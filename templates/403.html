@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akses Ditolak - Sup Kopi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --co-primary:    #17171c;
+            --co-canvas:     #ffffff;
+            --co-stone:      #eeece7;
+            --co-hairline:   #d9d9dd;
+            --co-muted:      #93939f;
+            --co-deep-green: #003c33;
+            --co-danger:     #dc3545;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--co-stone);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .card {
+            background: var(--co-canvas);
+            border: 1px solid var(--co-hairline);
+            border-radius: 16px;
+            padding: 3rem 2.5rem;
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+        }
+        .icon-wrap {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+        }
+        .code {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--co-primary);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--co-primary);
+            margin-bottom: 0.75rem;
+        }
+        p {
+            font-size: 0.9rem;
+            color: var(--co-muted);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.65rem 1.5rem;
+            background: var(--co-deep-green);
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            transition: opacity 0.15s;
+        }
+        .btn:hover { opacity: 0.85; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-wrap">🔒</div>
+        <div class="code">403</div>
+        <h1>Akses Ditolak</h1>
+        <p>Halaman ini hanya bisa diakses oleh superuser.<br>Kamu tidak memiliki izin untuk membuka halaman ini.</p>
+        <a href="/" class="btn">Kembali ke Beranda</a>
+    </div>
+</body>
+</html>
