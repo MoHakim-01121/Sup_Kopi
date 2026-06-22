@@ -524,8 +524,22 @@ def cafe_invoice_pdf(request, invoice_id):
     )
 
     try:
+        import sys
+        import types
         from io import BytesIO
         from django.template.loader import get_template
+
+        # xhtml2pdf mengimport pyhanko (PDF signing) yang konflik dengan
+        # versi system di PythonAnywhere. Stub module-nya karena kita
+        # tidak butuh fitur signing.
+        for _mod in [
+            'pyhanko', 'pyhanko.sign', 'pyhanko.sign.signers',
+            'pyhanko.sign.timestamps', 'pyhanko_certvalidator',
+            'pyhanko_certvalidator._asyncio_compat',
+        ]:
+            if _mod not in sys.modules:
+                sys.modules[_mod] = types.ModuleType(_mod)
+
         from xhtml2pdf import pisa
 
         template = get_template('cafe/invoice_pdf.html')
