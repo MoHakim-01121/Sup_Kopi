@@ -202,7 +202,8 @@
     .nav-mobile-drawer .mobile-cta:hover { background: #e8593b; }
 
     @media (max-width: 768px) {
-        .nav-links, .nav-actions { display: none; }
+        .nav-links { display: none; }
+        .nav-actions > *:not(.nav-hamburger) { display: none; }
         .nav-hamburger { display: flex; align-items: center; justify-content: center; }
         .site-nav .nav-inner { grid-template-columns: 1fr auto; }
     }
