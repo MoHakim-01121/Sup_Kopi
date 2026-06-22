@@ -525,20 +525,24 @@ def cafe_invoice_pdf(request, invoice_id):
 
     try:
         import sys
-        import types
         from io import BytesIO
         from django.template.loader import get_template
+        from unittest.mock import MagicMock
 
         # xhtml2pdf mengimport pyhanko (PDF signing) yang konflik dengan
-        # versi system di PythonAnywhere. Stub module-nya karena kita
-        # tidak butuh fitur signing.
+        # versi system di PythonAnywhere. Mock seluruh pyhanko karena
+        # kita tidak butuh fitur signing sama sekali.
         for _mod in [
-            'pyhanko', 'pyhanko.sign', 'pyhanko.sign.signers',
-            'pyhanko.sign.timestamps', 'pyhanko_certvalidator',
+            'pyhanko',
+            'pyhanko.pdf_utils',
+            'pyhanko.pdf_utils.incremental_writer',
+            'pyhanko.sign',
+            'pyhanko.sign.signers',
+            'pyhanko.sign.timestamps',
+            'pyhanko_certvalidator',
             'pyhanko_certvalidator._asyncio_compat',
         ]:
-            if _mod not in sys.modules:
-                sys.modules[_mod] = types.ModuleType(_mod)
+            sys.modules[_mod] = MagicMock()
 
         from xhtml2pdf import pisa
 
