@@ -5,69 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akses Ditolak — Sup Kopi</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <style>
         :root {
             --co-primary:       #17171c;
-            --co-ink:           #212121;
-            --co-canvas:        #ffffff;
             --co-stone:         #eeece7;
-            --co-hairline:      #d9d9dd;
-            --co-border:        #d9d9dd;
-            --co-muted:         #93939f;
             --co-body-muted:    #616161;
-            --co-error:         #b30000;
-            --co-error-bg:      #fff1f0;
-            --co-error-border:  #fecaca;
             --co-primary-hover: #2d2d35;
-            --r-xs:  4px;
-            --r-sm:  8px;
-            --r-md:  16px;
+            --r-sm: 8px;
         }
 
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', 'Arial', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background: var(--co-stone);
-            color: var(--co-ink);
-            font-size: 14px;
-            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
-        }
-
-        .error-card {
-            background: var(--co-canvas);
-            border: 1px solid var(--co-border);
-            border-radius: var(--r-md);
-            padding: 3rem 2.5rem;
-            max-width: 400px;
-            width: 100%;
             text-align: center;
-        }
-
-        .error-icon {
-            font-size: 1.25rem;
-            color: var(--co-muted);
-            margin-bottom: 1.25rem;
         }
 
         .error-number {
             font-family: 'Space Grotesk', system-ui, sans-serif;
-            font-size: 5.5rem;
+            font-size: 6rem;
             font-weight: 700;
             letter-spacing: -0.04em;
             line-height: 1;
             color: var(--co-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
         h1 {
@@ -82,7 +53,6 @@
         p {
             font-size: 13px;
             color: var(--co-body-muted);
-            line-height: 1.65;
             margin-bottom: 2rem;
         }
 
@@ -92,7 +62,6 @@
             gap: 7px;
             background: var(--co-primary);
             color: #fff;
-            border: none;
             border-radius: var(--r-sm);
             padding: 9px 18px;
             font-size: 13px;
@@ -102,25 +71,15 @@
             transition: background 0.14s;
         }
 
-        .btn-home:hover {
-            background: var(--co-primary-hover);
-            color: #fff;
-        }
-
+        .btn-home:hover { background: var(--co-primary-hover); color: #fff; }
         .btn-home:active { transform: scale(0.97); }
     </style>
 </head>
 <body>
-    <div class="error-card">
-        <div class="error-icon">
-            <i class="fa-solid fa-lock"></i>
-        </div>
-
+    <div>
         <div class="error-number">403</div>
-
         <h1>Akses Ditolak</h1>
         <p>Kamu tidak memiliki izin untuk membuka halaman ini.</p>
-
         <a href="/" class="btn-home">
             <i class="fa-solid fa-arrow-left"></i>
             Kembali ke Beranda
