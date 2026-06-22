@@ -12,6 +12,7 @@ from django.core.paginator import Paginator
 from datetime import timedelta
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
+from django.contrib.auth.decorators import login_required
 from apps.accounts.decorators import supplier_required, supplier_admin_required, supplier_owner_required, cafe_required
 from apps.accounts.models import SupplierStaff, StaffInvitation, User
 from apps.orders.models import Order, OrderItem
@@ -512,16 +513,19 @@ def cafe_invoices(request, invoice_id=None):
     })
 
 
-@cafe_required
+@login_required
 def cafe_invoice_pdf(request, invoice_id):
-    """Generate PDF invoice kredit untuk kafe."""
+    """Generate PDF invoice kredit — bisa diakses kafe (punya invoice) atau supplier."""
     import traceback
 
-    invoice = get_object_or_404(
-        CreditInvoice,
-        id=invoice_id,
-        credit_account__cafe=request.user,
-    )
+    user = request.user
+    if user.is_any_supplier:
+        invoice = get_object_or_404(CreditInvoice, id=invoice_id)
+    elif user.is_cafe:
+        invoice = get_object_or_404(CreditInvoice, id=invoice_id, credit_account__cafe=user)
+    else:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
 
     try:
         import sys
