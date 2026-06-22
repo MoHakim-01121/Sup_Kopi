@@ -515,9 +515,6 @@ def cafe_invoices(request, invoice_id=None):
 @cafe_required
 def cafe_invoice_pdf(request, invoice_id):
     """Generate PDF invoice kredit untuk kafe."""
-    from io import BytesIO
-    from django.template.loader import get_template
-    from xhtml2pdf import pisa
     import traceback
 
     invoice = get_object_or_404(
@@ -527,6 +524,10 @@ def cafe_invoice_pdf(request, invoice_id):
     )
 
     try:
+        from io import BytesIO
+        from django.template.loader import get_template
+        from xhtml2pdf import pisa
+
         template = get_template('cafe/invoice_pdf.html')
         html = template.render({'invoice': invoice}, request)
 
