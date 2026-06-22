@@ -541,7 +541,7 @@ def cafe_invoice_pdf(request, invoice_id):
     except Exception as e:
         return HttpResponse(
             f"<pre>ERROR: {type(e).__name__}: {e}\n\n{traceback.format_exc()}</pre>",
-            status=500
+            status=200
         )
 
 
