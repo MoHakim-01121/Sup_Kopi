@@ -11,17 +11,13 @@
 
     <style>
         :root {
-            --co-black:         #000000;
             --co-primary:       #17171c;
             --co-ink:           #212121;
-            --co-deep-green:    #003c33;
-            --co-dark-navy:     #071829;
             --co-canvas:        #ffffff;
             --co-stone:         #eeece7;
             --co-hairline:      #d9d9dd;
             --co-border:        #d9d9dd;
             --co-muted:         #93939f;
-            --co-slate:         #75758a;
             --co-body-muted:    #616161;
             --co-error:         #b30000;
             --co-error-bg:      #fff1f0;
@@ -52,51 +48,35 @@
             background: var(--co-canvas);
             border: 1px solid var(--co-border);
             border-radius: var(--r-md);
-            padding: 2.75rem 2.5rem;
-            max-width: 440px;
+            padding: 3rem 2.5rem;
+            max-width: 400px;
             width: 100%;
             text-align: center;
         }
 
-        .icon-wrap {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: var(--co-error-bg);
-            border: 1px solid var(--co-error-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
+        .error-icon {
+            font-size: 1.25rem;
+            color: var(--co-muted);
+            margin-bottom: 1.25rem;
         }
 
-        .icon-wrap i {
-            font-size: 1.5rem;
-            color: var(--co-error);
-        }
-
-        .error-code {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--co-error);
-            background: var(--co-error-bg);
-            border: 1px solid var(--co-error-border);
-            border-radius: var(--r-xs);
-            display: inline-block;
-            padding: 3px 10px;
-            margin-bottom: 1rem;
+        .error-number {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            font-size: 5.5rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            color: var(--co-primary);
+            margin-bottom: 0.5rem;
         }
 
         h1 {
-            font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-            font-size: 1.375rem;
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            font-size: 1.125rem;
             font-weight: 600;
             letter-spacing: -0.02em;
             color: var(--co-primary);
-            margin-bottom: 0.625rem;
+            margin-bottom: 0.5rem;
         }
 
         p {
@@ -104,12 +84,6 @@
             color: var(--co-body-muted);
             line-height: 1.65;
             margin-bottom: 2rem;
-        }
-
-        .divider {
-            border: none;
-            border-top: 1px solid var(--co-hairline);
-            margin: 0 0 1.75rem;
         }
 
         .btn-home {
@@ -138,16 +112,14 @@
 </head>
 <body>
     <div class="error-card">
-        <div class="icon-wrap">
+        <div class="error-icon">
             <i class="fa-solid fa-lock"></i>
         </div>
 
-        <span class="error-code">Error 403</span>
+        <div class="error-number">403</div>
 
         <h1>Akses Ditolak</h1>
         <p>Kamu tidak memiliki izin untuk membuka halaman ini.</p>
-
-        <hr class="divider">
 
         <a href="/" class="btn-home">
             <i class="fa-solid fa-arrow-left"></i>
