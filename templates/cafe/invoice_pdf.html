@@ -98,42 +98,9 @@ body {
 
 .hr { border: none; border-top: 1px solid #ddd; }
 .footer-text { font-size: 9px; color: #aaa; text-align: right; }
-
-/* Print toolbar — hanya tampil di layar, hilang saat print */
-@media screen {
-    .print-toolbar {
-        position: fixed; top: 0; left: 0; right: 0;
-        background: #111; color: #fff;
-        padding: 10px 24px;
-        display: flex; align-items: center; justify-content: space-between;
-        font-family: Arial, sans-serif; font-size: 13px;
-        z-index: 999;
-    }
-    .print-toolbar a { color: #aaa; text-decoration: none; font-size: 13px; }
-    .print-toolbar a:hover { color: #fff; }
-    .btn-print {
-        background: #fff; color: #111;
-        border: none; border-radius: 6px;
-        padding: 7px 18px; font-size: 13px; font-weight: 600;
-        cursor: pointer; display: flex; align-items: center; gap: 7px;
-    }
-    .btn-print:hover { background: #e5e5e5; }
-    body { padding-top: 52px; }
-}
-@media print {
-    .print-toolbar { display: none !important; }
-    body { padding-top: 0; }
-}
 </style>
 </head>
 <body>
-
-<div class="print-toolbar">
-    <a href="/cafe/invoices/">← Kembali ke Tagihan</a>
-    <button class="btn-print" onclick="window.print()">
-        &#128438; Simpan sebagai PDF
-    </button>
-</div>
 
 <!-- HEADER -->
 <table class="tbl-layout" style="margin-bottom: 24px;">
@@ -267,11 +234,5 @@ body {
 <hr class="hr" style="margin-bottom: 10px;">
 <div class="footer-text">Halaman 1 dari 1</div>
 
-<script>
-    /* Auto-buka dialog print saat halaman dimuat */
-    window.addEventListener('load', function() {
-        window.print();
-    });
-</script>
 </body>
 </html>

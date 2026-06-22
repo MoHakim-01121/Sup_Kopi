@@ -514,13 +514,27 @@ def cafe_invoices(request, invoice_id=None):
 
 @cafe_required
 def cafe_invoice_pdf(request, invoice_id):
-    """Render invoice sebagai halaman print-friendly (browser print → Save as PDF)."""
+    """Generate PDF invoice kredit untuk kafe."""
+    from io import BytesIO
+    from django.template.loader import get_template
+    from xhtml2pdf import pisa
+
     invoice = get_object_or_404(
         CreditInvoice,
         id=invoice_id,
         credit_account__cafe=request.user,
     )
-    return render(request, 'cafe/invoice_pdf.html', {'invoice': invoice})
+    template = get_template('cafe/invoice_pdf.html')
+    html = template.render({'invoice': invoice}, request)
+
+    buffer = BytesIO()
+    pisa.CreatePDF(html, dest=buffer, encoding='utf-8')
+    buffer.seek(0)
+
+    filename = f"invoice-{invoice.order.order_number}.pdf"
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
 
 
 @cafe_required
