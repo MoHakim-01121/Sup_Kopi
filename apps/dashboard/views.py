@@ -518,23 +518,31 @@ def cafe_invoice_pdf(request, invoice_id):
     from io import BytesIO
     from django.template.loader import get_template
     from xhtml2pdf import pisa
+    import traceback
 
     invoice = get_object_or_404(
         CreditInvoice,
         id=invoice_id,
         credit_account__cafe=request.user,
     )
-    template = get_template('cafe/invoice_pdf.html')
-    html = template.render({'invoice': invoice}, request)
 
-    buffer = BytesIO()
-    pisa.CreatePDF(html, dest=buffer, encoding='utf-8')
-    buffer.seek(0)
+    try:
+        template = get_template('cafe/invoice_pdf.html')
+        html = template.render({'invoice': invoice}, request)
 
-    filename = f"invoice-{invoice.order.order_number}.pdf"
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="{filename}"'
-    return response
+        buffer = BytesIO()
+        pisa.CreatePDF(html, dest=buffer, encoding='utf-8')
+        buffer.seek(0)
+
+        filename = f"invoice-{invoice.order.order_number}.pdf"
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
+    except Exception as e:
+        return HttpResponse(
+            f"<pre>ERROR: {type(e).__name__}: {e}\n\n{traceback.format_exc()}</pre>",
+            status=500
+        )
 
 
 @cafe_required
