@@ -320,11 +320,63 @@
         from { width: 100%; }
         to   { width: 0%; }
     }
+
+    /* ════════════════════════════════════════
+       MOBILE — sidebar overlay drawer
+    ════════════════════════════════════════ */
+    .sidebar-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 999;
+    }
+    .topbar-hamburger {
+        display: none;
+        background: none; border: none;
+        padding: 6px 8px; margin-right: 8px;
+        color: var(--co-muted); cursor: pointer;
+        font-size: 1rem; border-radius: var(--r-xs);
+        transition: color 0.15s, background 0.15s;
+        flex-shrink: 0;
+    }
+    .topbar-hamburger:hover { color: var(--co-primary); background: var(--co-stone); }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
+            z-index: 1001;
+        }
+        body.sidebar-open .sidebar { transform: translateX(0); }
+        body.sidebar-open .sidebar-overlay { display: block; }
+
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+        .topbar-hamburger { display: flex; align-items: center; }
+
+        .page-content { padding: 16px; }
+        .topbar { padding: 0 16px; }
+
+        .sd-kpi-grid { grid-template-columns: repeat(2,1fr) !important; }
+        .sd-grid-2 { grid-template-columns: 1fr !important; }
+        .sd-intro { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .sd-intro h1 { font-size: 1.4rem; }
+        .sd-toolbar { flex-wrap: wrap; }
+        .sd-search { min-width: 100%; max-width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+        .sd-kpi-grid { grid-template-columns: 1fr !important; }
+    }
 </style>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
 <div style="min-height:100vh;">
     <!-- ════ SIDEBAR ════ -->
-    <aside class="sidebar" role="navigation" aria-label="Supplier panel">
+    <aside class="sidebar" id="supplierSidebar" role="navigation" aria-label="Supplier panel">
         <div class="sidebar-brand">
             <div class="brand-icon"><i class="fa-solid fa-mug-hot"></i></div>
             <div>
@@ -382,6 +434,9 @@
     <!-- ════ MAIN ════ -->
     <div class="main-content">
         <header class="topbar">
+            <button class="topbar-hamburger" id="sidebarHamburger" aria-label="Buka menu" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
             <div class="topbar-user-wrap">
                 <button class="topbar-user" id="topbarUserBtn" type="button">
@@ -457,7 +512,31 @@
                 drop.classList.remove('open');
             });
         }
+
+        var hamburger = document.getElementById('sidebarHamburger');
+        if (hamburger) {
+            hamburger.addEventListener('click', function(){
+                var isOpen = document.body.classList.toggle('sidebar-open');
+                hamburger.setAttribute('aria-expanded', isOpen);
+            });
+        }
+
+        /* Close sidebar when clicking a nav link on mobile */
+        var sidebar = document.getElementById('supplierSidebar');
+        if (sidebar) {
+            sidebar.querySelectorAll('.sidebar-link').forEach(function(link){
+                link.addEventListener('click', function(){
+                    if (window.innerWidth <= 768) closeMobileSidebar();
+                });
+            });
+        }
     });
+
+    window.closeMobileSidebar = function() {
+        document.body.classList.remove('sidebar-open');
+        var h = document.getElementById('sidebarHamburger');
+        if (h) h.setAttribute('aria-expanded', 'false');
+    };
 })();
 </script>
 {% endblock %}

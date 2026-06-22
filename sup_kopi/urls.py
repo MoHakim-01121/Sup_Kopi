@@ -5,6 +5,15 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from apps.dashboard import views as views_dashboard
 
+
+class _SuperuserOnlyAdminSite(admin.AdminSite):
+    def has_permission(self, request):
+        return request.user.is_active and request.user.is_superuser
+
+
+admin.site.__class__ = _SuperuserOnlyAdminSite
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('apps.accounts.urls')),
