@@ -75,7 +75,7 @@
         <div class="mark"><i class="fa-solid fa-mug-hot"></i></div>
         <span class="auth-eyebrow">Auth · Masuk</span>
         <h1 class="auth-title">Selamat <em>datang</em></h1>
-        <p class="auth-sub">Masuk ke akun kafe kamu</p>
+        <p class="auth-sub">Masuk ke akun kafe atau supplier</p>
     </div>
 
     <div class="auth-card">
@@ -94,7 +94,7 @@
 
             <div class="auth-divider">
                 <span class="line"></span>
-                <span class="txt">atau dengan email</span>
+                <span class="txt">atau dengan email / username</span>
                 <span class="line"></span>
             </div>
 
@@ -102,9 +102,9 @@
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}">
                 <div class="auth-field">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control"
-                           placeholder="email@kafe.com" autofocus required>
+                    <label class="form-label">Email atau Username</label>
+                    <input type="text" name="email" class="form-control"
+                           placeholder="email@kafe.com atau username" autofocus required>
                 </div>
                 <div class="auth-field">
                     <label class="form-label">Password</label>

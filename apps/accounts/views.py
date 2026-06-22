@@ -171,19 +171,36 @@ def login_view(request):
     next_url = request.GET.get('next', '/')
 
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip().lower()
+        identifier = request.POST.get('email', '').strip()
         password = request.POST.get('password', '')
         next_url = request.POST.get('next', '/')
+
+        # Cari user by email dulu, lalu fallback ke username
+        found = None
         try:
-            found = User.objects.get(email__iexact=email, is_active=True)
+            found = User.objects.get(email__iexact=identifier, is_active=True)
         except (User.DoesNotExist, User.MultipleObjectsReturned):
-            found = None
+            try:
+                found = User.objects.get(username__iexact=identifier, is_active=True)
+            except (User.DoesNotExist, User.MultipleObjectsReturned):
+                found = None
 
         user = authenticate(request, username=found.username, password=password) if found else None
 
         if user:
             if user.is_any_supplier:
-                return redirect('/accounts/supplier/login/')
+                if getattr(django_settings, 'DEMO_MODE', False) or _is_trusted_device(request, user):
+                    login(request, user, backend=BACKEND)
+                    messages.success(request, f'Selamat datang, {user.username}!')
+                    return redirect('/supplier/dashboard/')
+                if not user.email:
+                    messages.error(request, 'Akun ini belum memiliki email. Hubungi administrator.')
+                    return render(request, 'accounts/login.html', {'next': next_url})
+                otp = EmailOTP.generate(user)
+                _send_otp_email(user, otp)
+                request.session['otp_user_id'] = user.pk
+                return redirect('/accounts/supplier/verify/')
+
             login(request, user, backend=BACKEND)
             messages.success(request, f'Selamat datang, {user.username}!')
             return redirect(next_url if next_url.startswith('/') else '/')
